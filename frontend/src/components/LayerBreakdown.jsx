@@ -10,6 +10,7 @@ export default function LayerBreakdown({ layers }) {
     canary,
     rule_based,
     heuristic,
+    openai_moderation,
     embedding_similarity,
     ml_classifier,
     context_policy,
@@ -18,6 +19,7 @@ export default function LayerBreakdown({ layers }) {
   const l0Color = { bg: '#3a3242', border: '#52495c', text: '#D1C4E9' };
   const l1Color = { bg: '#3a2727', border: '#5c3e3e', text: '#FFCDD2' };
   const l2Color = { bg: '#3a3227', border: '#5c503e', text: '#FFE0B2' };
+  const l25Color = { bg: '#25352c', border: '#324a3e', text: '#A5D6A7' };
   const l3Color = { bg: '#3a3627', border: '#5c563e', text: '#FFF9C4' };
   const l4Color = { bg: '#27313a', border: '#3e4d5c', text: '#B3E5FC' };
   const l5Color = { bg: '#3a272b', border: '#5c3e45', text: '#F8BBD0' };
@@ -62,6 +64,24 @@ export default function LayerBreakdown({ layers }) {
         score={heuristic?.score}
         latency={heuristic?.latency_ms}
         detail={heuristic?.reason ? `ANOMALY DETECTED: ${heuristic.reason}` : "ANOMALY CHECK PASSED"}
+      />
+
+      {/* Layer 2.5: OpenAI Moderation */}
+      <LayerRow
+        name="OpenAI Moderation"
+        number="L2.5"
+        color={l25Color}
+        ran={openai_moderation?.ran === true}
+        triggered={openai_moderation?.triggered}
+        score={openai_moderation?.score}
+        latency={openai_moderation?.latency_ms}
+        detail={
+          openai_moderation?.triggered
+            ? `FLAGGED: ${openai_moderation.flagged_category}`
+            : openai_moderation?.ran 
+              ? "MODERATION PASSED" 
+              : "DISABLED"
+        }
       />
 
       {/* Layer 3 — Embedding Similarity */}

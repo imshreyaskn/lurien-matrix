@@ -51,15 +51,14 @@ class OpenAIModerationLayer:
                 categories = result["categories"]
                 category_scores = result["category_scores"]
                 
-                # Find the highest scoring category if flagged
-                max_score = 0.0
+                max_score = max(category_scores.values()) if category_scores else 0.0
                 flagged_category = None
                 
                 if flagged:
                     for cat, is_flagged in categories.items():
-                        if is_flagged and category_scores[cat] > max_score:
-                            max_score = category_scores[cat]
+                        if is_flagged and category_scores[cat] == max(c_score for c_name, c_score in category_scores.items() if categories[c_name]):
                             flagged_category = cat
+                            break
                             
                 latency = (time.perf_counter() - start) * 1000
                 return ModerationResult(
