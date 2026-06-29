@@ -80,6 +80,62 @@ const response = await fw.openai.chat.completions.create({
 
 ---
 
+## SDK API Reference
+
+### Initialization
+```javascript
+const fw = new LurienMatrix(options);
+```
+**Options:**
+- `apiKey` (string, required): Your Lurien Matrix Firewall API Key.
+- `baseUrl` (string, optional): Backend URL. Defaults to the live cloud firewall.
+- `threshold` (number, optional): Minimum risk score (0.0 to 1.0) to block a prompt. Default: `0.50`.
+- `mode` (string, optional): `"check"` or `"proxy"`. Default: `"check"`.
+- `provider` (string, optional): Required if mode is `"proxy"`. (`"openai"`, `"gemini"`, `"anthropic"`, `"groq"`).
+- `llmApiKey` (string, optional): Your real LLM provider API key (Required if mode is `"proxy"`).
+- `timeout` (number, optional): Request timeout in ms. Default: `5000`.
+- `onBlocked` (Function, optional): Callback triggered when a prompt is blocked. Receives the `firewall_report`.
+- `onError` (Function, optional): Callback triggered on internal or network errors.
+
+### `fw.check(prompt, [metadata])`
+Manually assess a single prompt.
+- **Returns:** Promise resolving to a risk assessment object:
+  ```json
+  {
+    "safe": false,
+    "risk_score": 0.95,
+    "attack_type": "direct_injection",
+    "confidence": 0.99,
+    "flagged_layer": "ML Classifier"
+  }
+  ```
+
+### `fw.checkBatch(prompts)`
+Assess an array of up to 50 prompts at once. Returns an array of risk assessments.
+
+### `fw.middleware(options)`
+Express middleware to automatically block requests containing malicious prompts.
+**Options:**
+- `extractPrompt` (Function): Custom function to extract the prompt from `req`. Defaults to checking `req.body.prompt`, `req.body.message`, or the last message in `req.body.messages`.
+- `failOnMissingPrompt` (boolean): If `true`, returns 400 if no prompt is found. Default: `false`.
+- `failOnError` (boolean): If `true`, blocks the request (500) if the firewall fails to respond. Default: `false`.
+
+### Error Handling
+If you use **Proxy Mode**, blocked requests will throw a `FirewallBlockedError`.
+```javascript
+const { FirewallBlockedError } = require('lurien-matrix');
+
+try {
+  await fw.openai.chat.completions.create({...});
+} catch (err) {
+  if (err instanceof FirewallBlockedError) {
+    console.log("Blocked by firewall:", err.report.attack_type);
+  }
+}
+```
+
+---
+
 ## Project Structure
 
 ```

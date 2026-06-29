@@ -17,11 +17,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER user
 
 # Install Python dependencies
-COPY --chown=user requirements.txt .
+COPY --chown=user backend/requirements.txt .
 RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 
 # Copy source code
 COPY --chown=user . $HOME/app
+
+# Switch context to the active backend folder
+WORKDIR $HOME/app/backend
 
 # Expose port
 EXPOSE 7860
