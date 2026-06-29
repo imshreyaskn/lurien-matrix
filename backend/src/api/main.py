@@ -24,6 +24,7 @@ from src.layers.heuristic import HeuristicLayer
 from src.layers.embedding_similarity import EmbeddingSimilarityLayer
 from src.layers.context_policy import ContextAwarePolicyLayer
 from src.layers.output_monitor import OutputMonitor
+from src.layers.openai_moderation import OpenAIModerationLayer
 
 from src.classifier.inference import InjectionClassifier
 from src.proxy.engine import ProxyEngine
@@ -111,6 +112,7 @@ async def lifespan(app: FastAPI):
     
     policy = ContextAwarePolicyLayer(model=shared_st_model)
     output_mon = OutputMonitor()
+    openai_mod = OpenAIModerationLayer()
 
     # Build pipeline
     pipeline = ClassifierPipeline(
@@ -120,6 +122,7 @@ async def lifespan(app: FastAPI):
         canary_detector=canary,
         embedding_layer=embedding,
         context_policy=policy,
+        openai_moderation=openai_mod,
         default_threshold=threshold
     )
     

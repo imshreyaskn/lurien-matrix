@@ -20,6 +20,7 @@ from src.layers.heuristic import HeuristicLayer
 from src.layers.embedding_similarity import EmbeddingSimilarityLayer
 from src.classifier.inference import InjectionClassifier
 from src.layers.context_policy import ContextAwarePolicyLayer
+from src.layers.openai_moderation import OpenAIModerationLayer
 
 logger = logging.getLogger("llm_firewall.pipeline")
 
@@ -68,6 +69,7 @@ class ClassifierPipeline:
         canary_detector: CanaryTokenDetector,
         embedding_layer: EmbeddingSimilarityLayer,
         context_policy: ContextAwarePolicyLayer,
+        openai_moderation: Optional[OpenAIModerationLayer] = None,
         default_threshold: float = 0.50,
     ) -> None:
         self.rules = rule_based
@@ -76,6 +78,7 @@ class ClassifierPipeline:
         self.canary = canary_detector
         self.embedding = embedding_layer
         self.policy = context_policy
+        self.openai_moderation = openai_moderation
         self.default_threshold = default_threshold
         self.model_version = "1.0.0"
 
@@ -112,7 +115,7 @@ class ClassifierPipeline:
 
         # Helper to build short-circuited response
         def build_short_circuit(flagged_name, risk, attack, pattern, running_layers):
-            all_layer_names = ["canary", "rule_based", "heuristic", "embedding_similarity", "ml_classifier", "context_policy"]
+            all_layer_names = ["canary", "rule_based", "heuristic", "embedding_similarity", "openai_moderation", "ml_classifier", "context_policy"]
             final_layers = {}
             for name in all_layer_names:
                 if name in running_layers:
@@ -218,6 +221,27 @@ class ClassifierPipeline:
                 pattern=f"embedding similarity match: {embedding_res.nearest_attack_preview}",
                 running_layers=layers_data
             )
+
+        # ── Layer 2.5: OpenAI Moderation (Optional) ────────────────
+        if self.openai_moderation and self.openai_moderation.enabled:
+            om_res = self.openai_moderation.analyze(text)
+            layers_data["openai_moderation"] = {
+                "ran": True,
+                "triggered": om_res.triggered,
+                "score": om_res.score,
+                "flagged_category": om_res.flagged_category,
+                "latency_ms": om_res.latency_ms
+            }
+            if om_res.triggered:
+                return build_short_circuit(
+                    flagged_name="openai_moderation",
+                    risk=om_res.score,
+                    attack=om_res.flagged_category or "openai_moderation_flag",
+                    pattern="OpenAI omni-moderation-latest flag",
+                    running_layers=layers_data
+                )
+        else:
+            layers_data["openai_moderation"] = {"ran": False, "reason": "not_enabled"}
 
         # ── Layer 3: ML Classifier ─────────────────────────────────
         ml_res = self.ml_classifier.predict(text)
