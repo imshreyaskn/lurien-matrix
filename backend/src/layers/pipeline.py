@@ -113,6 +113,12 @@ class ClassifierPipeline:
 
         # Initialize results structure
         layers_data = {}
+        cumulative_risk = 0.0
+
+        def update_risk(score: float):
+            nonlocal cumulative_risk
+            cumulative_risk = 1.0 - ((1.0 - cumulative_risk) * (1.0 - score))
+            return cumulative_risk
 
         # Helper to build short-circuited response
         def build_short_circuit(flagged_name, risk, attack, pattern, running_layers):
@@ -163,17 +169,19 @@ class ClassifierPipeline:
 
         # ── Layer 1a: Rule-Based ───────────────────────────────────
         rule_res = self.rules.analyze(text)
+        current_risk = update_risk(rule_res.score)
+        is_rule_triggered = rule_res.triggered or (current_risk >= threshold)
         layers_data["rule_based"] = {
             "ran": True,
-            "triggered": rule_res.triggered,
+            "triggered": is_rule_triggered,
             "matched_pattern": rule_res.matched_pattern,
             "score": rule_res.score,
             "latency_ms": rule_res.latency_ms
         }
-        if rule_res.triggered:
+        if is_rule_triggered:
             return build_short_circuit(
                 flagged_name="rule_based",
-                risk=rule_res.score,
+                risk=current_risk,
                 attack=rule_res.attack_category,
                 pattern=rule_res.matched_pattern,
                 running_layers=layers_data
@@ -182,9 +190,11 @@ class ClassifierPipeline:
         # ── Layer 1b: Heuristic Analysis ───────────────────────────
         # Note: pipeline.py uses 0.65 threshold override for Layer 2 Heuristic triggers
         heuristic_res = self.heuristic.analyze(text)
+        current_risk = update_risk(heuristic_res.score)
+        is_heur_triggered = heuristic_res.triggered or (current_risk >= threshold)
         layers_data["heuristic"] = {
             "ran": True,
-            "triggered": heuristic_res.triggered,
+            "triggered": is_heur_triggered,
             "score": heuristic_res.score,
             "signals": {
                 "instruction_density": heuristic_res.signals.instruction_density,
@@ -196,10 +206,10 @@ class ClassifierPipeline:
             } if heuristic_res.signals else None,
             "latency_ms": heuristic_res.latency_ms
         }
-        if heuristic_res.triggered:
+        if is_heur_triggered:
             return build_short_circuit(
                 flagged_name="heuristic",
-                risk=heuristic_res.score,
+                risk=current_risk,
                 attack="heuristic_composite",
                 pattern="heuristic trigger threshold exceeded",
                 running_layers=layers_data
@@ -207,17 +217,19 @@ class ClassifierPipeline:
 
         # ── Layer 2: Embedding Similarity ──────────────────────────
         embedding_res = self.embedding.check(text)
+        current_risk = update_risk(embedding_res.similarity_score)
+        is_emb_triggered = embedding_res.triggered or (current_risk >= threshold)
         layers_data["embedding_similarity"] = {
             "ran": True,
-            "triggered": embedding_res.triggered,
+            "triggered": is_emb_triggered,
             "similarity_score": embedding_res.similarity_score,
             "nearest_attack_preview": embedding_res.nearest_attack_preview,
             "latency_ms": embedding_res.latency_ms
         }
-        if embedding_res.triggered:
+        if is_emb_triggered:
             return build_short_circuit(
                 flagged_name="embedding_similarity",
-                risk=embedding_res.similarity_score,
+                risk=current_risk,
                 attack="jailbreak_paraphrase",
                 pattern=f"embedding similarity match: {embedding_res.nearest_attack_preview}",
                 running_layers=layers_data
@@ -227,8 +239,9 @@ class ClassifierPipeline:
         if self.openai_moderation and self.openai_moderation.enabled and use_openai_moderation:
             om_res = self.openai_moderation.analyze(text)
             
-            # Apply our own threshold override, treating high scores as triggers even if OpenAI didn't 'flag' it
-            is_om_triggered = om_res.triggered or (om_res.score >= threshold)
+            # Apply cumulative risk aggregator
+            current_risk = update_risk(om_res.score)
+            is_om_triggered = om_res.triggered or (current_risk >= threshold)
             
             layers_data["openai_moderation"] = {
                 "ran": True,
@@ -240,9 +253,9 @@ class ClassifierPipeline:
             if is_om_triggered:
                 return build_short_circuit(
                     flagged_name="openai_moderation",
-                    risk=om_res.score,
+                    risk=current_risk,
                     attack=om_res.flagged_category or "openai_moderation_flag",
-                    pattern="OpenAI moderation threshold exceeded",
+                    pattern="OpenAI moderation threshold exceeded (cumulative)",
                     running_layers=layers_data
                 )
         else:
@@ -253,9 +266,16 @@ class ClassifierPipeline:
         if ml_res.warning:
             warnings.append(ml_res.warning)
 
+        if ml_res.ran and ml_res.all_scores:
+            current_risk = update_risk(ml_res.all_scores.get("injection", 0.0))
+        else:
+            current_risk = cumulative_risk
+            
+        is_ml_triggered = ml_res.triggered or (current_risk >= threshold)
+
         layers_data["ml_classifier"] = {
             "ran": ml_res.ran,
-            "triggered": ml_res.triggered,
+            "triggered": is_ml_triggered if ml_res.ran else False,
             "attack_class": ml_res.attack_class,
             "confidence": ml_res.confidence,
             "all_scores": ml_res.all_scores,
@@ -264,41 +284,39 @@ class ClassifierPipeline:
         if ml_res.reason and not ml_res.ran:
             layers_data["ml_classifier"]["reason"] = ml_res.reason
 
-        if ml_res.ran and ml_res.triggered and ml_res.confidence >= threshold:
+        if is_ml_triggered and ml_res.ran:
             return build_short_circuit(
                 flagged_name="ml_classifier",
-                risk=ml_res.confidence,
+                risk=current_risk,
                 attack=ml_res.attack_class,
-                pattern=f"ML classified threat: {ml_res.attack_class}",
+                pattern=f"ML classified threat: {ml_res.attack_class} (cumulative)",
                 running_layers=layers_data
             )
 
         # ── Layer 4: Context Policy ────────────────────────────────
         policy_res = self.policy.check(text, app_context)
+        current_risk = update_risk(policy_res.score)
+        is_policy_triggered = policy_res.triggered or (current_risk >= threshold)
+        
         layers_data["context_policy"] = {
             "ran": True,
-            "triggered": policy_res.triggered,
+            "triggered": is_policy_triggered,
             "app_context": policy_res.app_context,
             "similarity_to_intent": policy_res.similarity_to_intent,
             "reason": policy_res.reason,
             "latency_ms": policy_res.latency_ms
         }
-        if policy_res.triggered:
+        if is_policy_triggered:
             return build_short_circuit(
                 flagged_name="context_policy",
-                risk=policy_res.score,
+                risk=current_risk,
                 attack="out_of_scope",
-                pattern=f"Out of scope for intent profile '{app_context}'",
+                pattern=f"Out of scope for intent profile '{app_context}' (cumulative)",
                 running_layers=layers_data
             )
 
         # ── All Layers Passed (SAFE) ───────────────────────────────
-        scores = [heuristic_res.score, embedding_res.similarity_score]
-        if "openai_moderation" in layers_data and layers_data["openai_moderation"]["ran"]:
-            scores.append(layers_data["openai_moderation"]["score"])
-        if ml_res.ran and ml_res.all_scores:
-            scores.append(ml_res.all_scores.get("injection", 0.0))
-        risk_score = round(max(scores), 4)
+        risk_score = round(cumulative_risk, 4)
 
         return PipelineResult(
             request_id=request_id,
