@@ -62,6 +62,12 @@ PATTERNS: dict[str, list[tuple[str, str]]] = {
         (r"enter\s+(god|admin|sudo|root)\s+mode", "enter admin mode"),
         (r"safety\s+(filters?|guidelines?)\s+(disabled|off|removed)", "safety filters disabled"),
     ],
+    "PROMPT_EXTRACTION": [
+        (r"(output|print|reveal|show|display|tell\s+me)\s+(me\s+)?(your\s+)?(system\s+)?(prompt|instructions|rules|directives)", "prompt extraction"),
+        (r"what\s+are\s+your\s+(system\s+)?(prompt|instructions|rules|directives)", "prompt extraction query"),
+        (r"repeat\s+the\s+words\s+above\s+starting\s+with", "prompt extraction repeat"),
+        (r"system\s+prompt\s+word\s+for\s+word", "exact system prompt extraction"),
+    ],
     "ENCODING_ATTACKS": [
         (r"[A-Za-z0-9+/]{50,}={0,2}", "base64 encoded content"),
         (r"(\\x[0-9a-fA-F]{2}){5,}", "hex encoded content"),
