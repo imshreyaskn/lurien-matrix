@@ -69,6 +69,7 @@ export default function ApiKeys() {
   const [appContext, setAppContext] = useState('general');
   const [customCanary, setCustomCanary] = useState('');
   const [customIntentExamples, setCustomIntentExamples] = useState('');
+  const [useOpenAi, setUseOpenAi] = useState(false);
   const [createdKey, setCreatedKey] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [activeTab, setActiveTab] = useState('curl');
@@ -87,7 +88,8 @@ export default function ApiKeys() {
         newKeyName,
         appContext || 'general',
         customCanary || null,
-        examples
+        examples,
+        useOpenAi
       );
       
       // Save the raw key to localStorage so the dashboard can authenticate
@@ -98,6 +100,7 @@ export default function ApiKeys() {
       setAppContext('general');
       setCustomCanary('');
       setCustomIntentExamples('');
+      setUseOpenAi(false);
       setShowCreate(false);
       refresh();
     } catch (err) {
@@ -245,6 +248,21 @@ export default function ApiKeys() {
                   className="w-full bg-luma-000 border border-luma-300 px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-700 uppercase tracking-widest"
                 />
               </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-xs text-accent-gold font-mono tracking-widest uppercase cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useOpenAi}
+                    onChange={(e) => setUseOpenAi(e.target.checked)}
+                    className="bg-luma-000 border-accent-gold text-accent-gold focus:ring-accent-gold accent-accent-gold"
+                  />
+                  ENABLE OPENAI MODERATION LAYER (+2S LATENCY)
+                </label>
+                <p className="text-[10px] text-luma-500 font-mono mt-1 ml-5 uppercase">
+                  Sends payloads to OpenAI's omni-moderation-latest endpoint. Must have OPENAI_API_KEY set in space secrets.
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -277,8 +295,15 @@ export default function ApiKeys() {
               <div key={key.key_id} className="p-4 flex items-center gap-4 hover:bg-luma-100 transition-colors">
                 <Key className="w-5 h-5 text-luma-500 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-luma-FFF tracking-widest uppercase">{key.name}</div>
-                  <div className="text-xs text-luma-500 font-mono tracking-widest uppercase">
+                  <div className="text-xs font-bold text-luma-FFF tracking-widest uppercase flex items-center gap-2">
+                    {key.name}
+                    {key.use_openai_moderation && (
+                      <span className="px-1.5 py-0.5 bg-accent-gold/10 text-accent-gold text-[10px] border border-accent-gold/30 rounded-sm whitespace-nowrap">
+                        OPENAI MODERATION ON
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-luma-500 font-mono tracking-widest uppercase mt-0.5">
                     FW_LIVE_****{key.key_id.slice(-8)}
                   </div>
                 </div>

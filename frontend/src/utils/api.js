@@ -76,10 +76,10 @@ export const api = {
   getLogDetail: (requestId) => apiFetch(`/v1/logs/${requestId}`),
 
   // Keys
-  createKey: (name, app_context, custom_canary, custom_intent_examples) =>
+  createKey: (name, app_context, custom_canary, custom_intent_examples, use_openai_moderation) =>
     apiFetch('/v1/keys', {
       method: 'POST',
-      body: JSON.stringify({ name, app_context, custom_canary, custom_intent_examples }),
+      body: JSON.stringify({ name, app_context, custom_canary, custom_intent_examples, use_openai_moderation }),
     }),
 
   listKeys: () => apiFetch('/v1/keys'),

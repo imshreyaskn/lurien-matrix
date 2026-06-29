@@ -49,7 +49,8 @@ async def check_prompt(
         threshold=body.threshold,
         metadata=body.metadata,
         app_context=app_ctx,
-        custom_canary=canary_token
+        custom_canary=canary_token,
+        use_openai_moderation=key_doc.get("use_openai_moderation", False)
     )
 
     # Set response headers
@@ -150,7 +151,8 @@ async def check_batch(
             pipeline.classify,
             text=prompt,
             app_context=app_ctx,
-            custom_canary=canary_token
+            custom_canary=canary_token,
+            use_openai_moderation=key_doc.get("use_openai_moderation", False)
         )
         results.append(result.to_dict())
 

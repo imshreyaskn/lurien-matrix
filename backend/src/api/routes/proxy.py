@@ -79,7 +79,8 @@ async def proxy_llm_request(
     result = pipeline.classify(
         text=prompt,
         app_context=app_ctx,
-        custom_canary=canary_token
+        custom_canary=canary_token,
+        use_openai_moderation=key_doc.get("use_openai_moderation", False)
     )
 
     # Extract model name from body

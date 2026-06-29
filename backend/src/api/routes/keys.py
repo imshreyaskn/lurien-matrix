@@ -49,6 +49,7 @@ async def create_api_key(
         "app_context": body.app_context,
         "custom_canary": body.custom_canary,
         "custom_intent_examples": body.custom_intent_examples,
+        "use_openai_moderation": body.use_openai_moderation,
     }
 
     # Insert initially to generate ID
@@ -81,6 +82,7 @@ async def create_api_key(
         total_checks=0,
         app_context=key_doc["app_context"],
         custom_canary=key_doc["custom_canary"],
+        use_openai_moderation=key_doc["use_openai_moderation"],
     )
 
 
@@ -104,6 +106,7 @@ async def list_api_keys(current_user: dict = Depends(validate_user_token)):
             "total_checks": doc.get("total_checks", 0),
             "app_context": doc.get("app_context", "general"),
             "custom_canary": doc.get("custom_canary", None),
+            "use_openai_moderation": doc.get("use_openai_moderation", False),
         })
 
     return {"keys": keys}

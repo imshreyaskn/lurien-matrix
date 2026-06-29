@@ -97,6 +97,7 @@ class ClassifierPipeline:
         metadata: Optional[dict] = None,
         app_context: str = "general",
         custom_canary: Optional[str] = None,
+        use_openai_moderation: bool = False,
     ) -> PipelineResult:
         """
         Run the full 6-layer pipeline on the given text.
@@ -223,7 +224,7 @@ class ClassifierPipeline:
             )
 
         # ── Layer 2.5: OpenAI Moderation (Optional) ────────────────
-        if self.openai_moderation and self.openai_moderation.enabled:
+        if self.openai_moderation and self.openai_moderation.enabled and use_openai_moderation:
             om_res = self.openai_moderation.analyze(text)
             layers_data["openai_moderation"] = {
                 "ran": True,

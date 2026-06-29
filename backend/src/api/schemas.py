@@ -50,6 +50,7 @@ class CreateKeyRequest(BaseModel):
     app_context: Optional[str] = Field(default="general", max_length=100)
     custom_canary: Optional[str] = Field(default=None, max_length=256)
     custom_intent_examples: Optional[list[str]] = Field(default=None)
+    use_openai_moderation: bool = Field(default=False)
 
 
 # ── Response Schemas ──────────────────────────────────────────
@@ -120,11 +121,21 @@ class LayerContextPolicy(BaseModel):
     score: Optional[float] = None
 
 
+class LayerOpenAIModeration(BaseModel):
+    ran: bool = True
+    reason: Optional[str] = None
+    triggered: Optional[bool] = None
+    score: Optional[float] = None
+    flagged_category: Optional[str] = None
+    latency_ms: Optional[float] = None
+
+
 class LayersResponse(BaseModel):
     canary: LayerCanary
     rule_based: LayerRuleBased
     heuristic: LayerHeuristic
     embedding_similarity: LayerEmbeddingSimilarity
+    openai_moderation: Optional[LayerOpenAIModeration] = None
     ml_classifier: LayerMLClassifier
     context_policy: LayerContextPolicy
 
@@ -169,6 +180,7 @@ class ApiKeyResponse(BaseModel):
     total_checks: int
     app_context: Optional[str] = "general"
     custom_canary: Optional[str] = None
+    use_openai_moderation: bool = False
 
 
 class StatsResponse(BaseModel):
