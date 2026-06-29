@@ -235,6 +235,7 @@ async def get_logs(
     blocked_only: bool = Query(False),
     attack_type: Optional[str] = Query(None),
     provider: Optional[str] = Query(None),
+    flagged_layer: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: dict = Depends(validate_user_token),
@@ -252,6 +253,8 @@ async def get_logs(
         query["attack_type"] = attack_type
     if provider:
         query["provider"] = provider
+    if flagged_layer:
+        query["flagged_layer"] = flagged_layer
     if start_date:
         try:
             query.setdefault("timestamp", {})["$gte"] = datetime.fromisoformat(start_date)

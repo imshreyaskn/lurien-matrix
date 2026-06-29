@@ -14,7 +14,7 @@ export default function Logs() {
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [blockedOnly, setBlockedOnly] = useState(false);
   const [attackType, setAttackType] = useState('');
-  const [provider, setProvider] = useState('');
+  const [flaggedLayer, setFlaggedLayer] = useState('');
   
   // Custom refresh trigger
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -26,7 +26,7 @@ export default function Logs() {
       flagged_only: flaggedOnly || undefined,
       blocked_only: blockedOnly || undefined,
       attack_type: attackType || undefined,
-      provider: provider || undefined,
+      flagged_layer: flaggedLayer || undefined,
     });
   };
 
@@ -38,7 +38,7 @@ export default function Logs() {
       refresh();
     }, 300); // 300ms debounce
     return () => clearTimeout(timer);
-  }, [page, flaggedOnly, blockedOnly, attackType, provider, refreshTrigger, refresh]);
+  }, [page, flaggedOnly, blockedOnly, attackType, flaggedLayer, refreshTrigger, refresh]);
 
   const logs = data?.logs || [];
   const total = data?.total || 0;
@@ -121,27 +121,33 @@ export default function Logs() {
             className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase tracking-widest"
           >
             <option value="">ALL VECTORS</option>
-            <option value="role_override">ROLE OVERRIDE</option>
-            <option value="goal_hijacking">GOAL HIJACKING</option>
-            <option value="context_poisoning">CONTEXT POISONING</option>
-            <option value="prompt_leaking">PROMPT LEAKING</option>
-            <option value="jailbreak_direct">JAILBREAK</option>
-            <option value="encoding_attack">ENCODING</option>
+            <option value="DIRECT_INJECTION">DIRECT INJECTION</option>
+            <option value="PERSONA_HIJACKING">PERSONA HIJACKING</option>
+            <option value="SYSTEM_OVERRIDE">SYSTEM OVERRIDE</option>
+            <option value="PROMPT_EXTRACTION">PROMPT EXTRACTION</option>
+            <option value="ENCODING_ATTACKS">ENCODING ATTACKS</option>
+            <option value="MANY_SHOT">MANY SHOT</option>
+            <option value="jailbreak_paraphrase">JAILBREAK (SEMANTIC)</option>
+            <option value="injection">ML INJECTION</option>
+            <option value="out_of_scope">OUT OF SCOPE</option>
+            <option value="heuristic_composite">HEURISTIC ANOMALY</option>
           </select>
         </div>
 
         <div>
-          <label className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1 block">Ingress Node</label>
+          <label className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1 block">Tripped Layer</label>
           <select
-            value={provider}
-            onChange={(e) => { setProvider(e.target.value); setPage(1); }}
+            value={flaggedLayer}
+            onChange={(e) => { setFlaggedLayer(e.target.value); setPage(1); }}
             className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase tracking-widest"
           >
-            <option value="">ALL NODES</option>
-            <option value="openai">OPENAI</option>
-            <option value="gemini">GEMINI</option>
-            <option value="anthropic">ANTHROPIC</option>
-            <option value="groq">GROQ</option>
+            <option value="">ALL LAYERS</option>
+            <option value="canary">L0 CANARY</option>
+            <option value="rule_based">L1 RULE-BASED</option>
+            <option value="heuristic">L2 HEURISTIC</option>
+            <option value="embedding_similarity">L3 EMBEDDING</option>
+            <option value="ml_classifier">L4 ML CLASSIFIER</option>
+            <option value="context_policy">L5 CONTEXT POLICY</option>
           </select>
         </div>
 
@@ -178,7 +184,7 @@ export default function Logs() {
                 <th className="p-4 w-24">STATUS</th>
                 <th className="p-4 w-24">RISK</th>
                 <th className="p-4">VECTOR</th>
-                <th className="p-4 w-24">NODE</th>
+                <th className="p-4 w-24">LAYER</th>
                 <th className="p-4 w-24">LATENCY</th>
                 <th className="p-4 w-16">VIEW</th>
               </tr>
@@ -212,8 +218,8 @@ export default function Logs() {
                   <td className="p-4">
                     {log.attack_type ? <AttackChip type={log.attack_type} /> : '—'}
                   </td>
-                  <td className="p-4 text-xs">
-                    {log.provider || 'CHK'}
+                  <td className="p-4 text-xs font-mono">
+                    {log.flagged_layer || '—'}
                   </td>
                   <td className="p-4 font-mono text-xs">
                     {formatMs(log.processing_time_ms)}
