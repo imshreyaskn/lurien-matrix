@@ -249,20 +249,7 @@ export default function ApiKeys() {
                 />
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-xs text-accent-gold font-mono tracking-widest uppercase cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={useOpenAi}
-                    onChange={(e) => setUseOpenAi(e.target.checked)}
-                    className="bg-luma-000 border-accent-gold text-accent-gold focus:ring-accent-gold accent-accent-gold"
-                  />
-                  ENABLE OPENAI MODERATION LAYER (+2S LATENCY)
-                </label>
-                <p className="text-[10px] text-luma-500 font-mono mt-1 ml-5 uppercase">
-                  Sends payloads to OpenAI's omni-moderation-latest endpoint. Must have OPENAI_API_KEY set in space secrets.
-                </p>
-              </div>
+
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -297,11 +284,7 @@ export default function ApiKeys() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-luma-FFF tracking-widest uppercase flex items-center gap-2">
                     {key.name}
-                    {key.use_openai_moderation && (
-                      <span className="px-1.5 py-0.5 bg-accent-gold/10 text-accent-gold text-[10px] border border-accent-gold/30 rounded-sm whitespace-nowrap">
-                        OPENAI MODERATION ON
-                      </span>
-                    )}
+
                   </div>
                   <div className="text-xs text-luma-500 font-mono tracking-widest uppercase mt-0.5">
                     FW_LIVE_****{key.key_id.slice(-8)}

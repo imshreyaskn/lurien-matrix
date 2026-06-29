@@ -82,28 +82,10 @@ export default function LayerBreakdown({ layers }) {
         }
       />
 
-      {/* Layer 4: OpenAI Moderation */}
-      <LayerRow
-        name="OpenAI Moderation"
-        number="L4"
-        color={l25Color}
-        ran={openai_moderation?.ran === true}
-        triggered={openai_moderation?.triggered}
-        score={openai_moderation?.score}
-        latency={openai_moderation?.latency_ms}
-        detail={
-          openai_moderation?.triggered
-            ? `FLAGGED: ${openai_moderation.flagged_category}`
-            : openai_moderation?.ran 
-              ? "MODERATION PASSED" 
-              : "DISABLED"
-        }
-      />
-
-      {/* Layer 5: ML Classifier */}
+      {/* Layer 4 — ML Classifier */}
       <LayerRow
         name="ML Classifier"
-        number="L5"
+        number="L4"
         color={l4Color}
         ran={ml_classifier?.ran !== false}
         triggered={ml_classifier?.triggered}
@@ -112,10 +94,10 @@ export default function LayerBreakdown({ layers }) {
         detail={ml_classifier?.attack_class ? `CLASS: ${ml_classifier.attack_class}` : ml_classifier?.reason || "CLASSIFICATION CLEAN"}
       />
 
-      {/* Layer 6 — Context Policy */}
+      {/* Layer 5 — Context Policy */}
       <LayerRow
         name="Context Policy"
-        number="L6"
+        number="L5"
         color={l5Color}
         ran={context_policy?.ran !== false}
         triggered={context_policy?.triggered}

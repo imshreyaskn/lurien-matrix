@@ -236,30 +236,8 @@ class ClassifierPipeline:
             )
 
         # ── Layer 2.5: OpenAI Moderation (Optional) ────────────────
-        if self.openai_moderation and self.openai_moderation.enabled and use_openai_moderation:
-            om_res = self.openai_moderation.analyze(text)
-            
-            # Apply cumulative risk aggregator
-            current_risk = update_risk(om_res.score)
-            is_om_triggered = om_res.triggered or (current_risk >= threshold)
-            
-            layers_data["openai_moderation"] = {
-                "ran": True,
-                "triggered": is_om_triggered,
-                "score": om_res.score,
-                "flagged_category": om_res.flagged_category,
-                "latency_ms": om_res.latency_ms
-            }
-            if is_om_triggered:
-                return build_short_circuit(
-                    flagged_name="openai_moderation",
-                    risk=current_risk,
-                    attack=om_res.flagged_category or "openai_moderation_flag",
-                    pattern="OpenAI moderation threshold exceeded (cumulative)",
-                    running_layers=layers_data
-                )
-        else:
-            layers_data["openai_moderation"] = {"ran": False, "reason": "not_enabled"}
+        # DISABLED PER USER REQUEST
+        layers_data["openai_moderation"] = {"ran": False, "reason": "not_enabled"}
 
         # ── Layer 3: ML Classifier ─────────────────────────────────
         ml_res = self.ml_classifier.predict(text)
