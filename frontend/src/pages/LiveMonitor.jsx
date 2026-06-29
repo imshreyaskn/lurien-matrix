@@ -97,8 +97,6 @@ export default function LiveMonitor() {
           <span className="text-luma-500">➔</span>
           <span className="px-2 py-0.5 border border-[#5c563e] text-[#FFF9C4] bg-[#3a3627]">EMBEDDING</span>
           <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#324a3e] text-[#A5D6A7] bg-[#25352c]">OPENAI</span>
-          <span className="text-luma-500">➔</span>
           <span className="px-2 py-0.5 border border-[#3e4d5c] text-[#B3E5FC] bg-[#27313a]">ML</span>
           <span className="text-luma-500">➔</span>
           <span className="px-2 py-0.5 border border-[#5c3e45] text-[#F8BBD0] bg-[#3a272b]">CONTEXT POLICY</span>
