@@ -14,8 +14,10 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { error } = usePolling(() => api.health(), 10000);
+  const { data: healthData, error } = usePolling(() => api.health(), 10000);
   const { user, logout } = useAuth();
+  
+  const activeLayers = healthData?.active_layers || 6;
 
   return (
     <aside className="hidden md:flex w-64 h-screen bg-luma-000 border-r border-luma-300 flex-col shrink-0 font-mono z-50">
@@ -65,7 +67,7 @@ export default function Sidebar() {
             <div className={`w-2 h-2 animate-flicker ${error ? 'bg-[#EF4444]' : 'bg-[#10B981]'}`} style={{ boxShadow: error ? '0 0 8px #EF4444' : '0 0 8px #10B981' }} />
           </div>
           <div className={`text-xs uppercase tracking-widest ${error ? 'text-firewall-red' : 'text-accent-gold'}`}>
-            {error ? 'OFFLINE / ERROR' : 'ACTIVE / 6-LAYER'}
+            {error ? 'OFFLINE / ERROR' : `ACTIVE / ${activeLayers}-LAYER`}
           </div>
           <div className="text-[10px] text-luma-500 font-sans tracking-widest uppercase break-all">
             ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}
