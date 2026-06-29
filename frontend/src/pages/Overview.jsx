@@ -194,7 +194,7 @@ export default function Overview() {
                 <span className="text-xs font-mono tracking-widest w-24 truncate shrink-0">
                   {log.prompt_hash?.slice(0, 12) || '—'}
                 </span>
-                <RiskBadge score={log.risk_score} size="sm" />
+                <RiskBadge score={log.risk_score} isBlocked={!log.safe} size="sm" />
                 {log.attack_type && <AttackChip type={log.attack_type} />}
                 <span className="text-xs font-mono tracking-widest ml-auto">
                   {formatMs(log.processing_time_ms)}

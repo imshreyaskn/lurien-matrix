@@ -64,7 +64,8 @@ export function truncate(str, maxLen = 30) {
 /**
  * Get color class based on risk score.
  */
-export function getRiskColor(score) {
+export function getRiskColor(score, isBlocked = false) {
+  if (isBlocked) return 'text-firewall-red';
   if (score === null || score === undefined || isNaN(score)) return 'text-luma-500';
   if (score >= 0.65) return 'text-firewall-red';
   if (score >= 0.35) return 'text-firewall-yellow';
@@ -74,7 +75,8 @@ export function getRiskColor(score) {
 /**
  * Get background color class based on risk score.
  */
-export function getRiskBg(score) {
+export function getRiskBg(score, isBlocked = false) {
+  if (isBlocked) return 'bg-firewall-red/10 border-firewall-red text-firewall-red';
   if (score === null || score === undefined || isNaN(score)) return 'bg-luma-100 border-luma-300 text-luma-500';
   if (score >= 0.65) return 'bg-firewall-red/10 border-firewall-red text-firewall-red';
   if (score >= 0.35) return 'bg-firewall-yellow/10 border-firewall-yellow text-firewall-yellow';

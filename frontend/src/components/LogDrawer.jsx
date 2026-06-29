@@ -39,7 +39,7 @@ export default function LogDrawer({ log, onClose }) {
         <div className="p-4 space-y-6">
           {/* Status & Score */}
           <div className="flex items-center gap-3">
-            <RiskBadge score={log.risk_score} size="lg" />
+            <RiskBadge score={log.risk_score} isBlocked={!log.safe} size="lg" />
             {log.attack_type && <AttackChip type={log.attack_type} />}
           </div>
 

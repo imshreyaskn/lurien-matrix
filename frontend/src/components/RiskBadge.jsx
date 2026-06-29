@@ -1,7 +1,7 @@
 import { formatRiskScore, getRiskBg } from '../utils/formatters';
 
-export default function RiskBadge({ score, size = 'md' }) {
-  const label = score === null || score === undefined ? 'UNKNOWN' : score >= 0.65 ? 'BLOCKED' : score >= 0.35 ? 'SUSPICIOUS' : 'SAFE';
+export default function RiskBadge({ score, isBlocked = false, size = 'md' }) {
+  const label = isBlocked ? 'BLOCKED' : score === null || score === undefined ? 'UNKNOWN' : score >= 0.65 ? 'BLOCKED' : score >= 0.35 ? 'SUSPICIOUS' : 'SAFE';
   
   const sizeClasses = {
     sm: 'text-xs px-1 py-0.5',
@@ -10,7 +10,7 @@ export default function RiskBadge({ score, size = 'md' }) {
   };
 
   const fallbackSize = sizeClasses[size] || sizeClasses.md;
-  const colorClasses = getRiskBg(score);
+  const colorClasses = getRiskBg(score, isBlocked);
 
   return (
     <span
@@ -19,7 +19,7 @@ export default function RiskBadge({ score, size = 'md' }) {
         ${fallbackSize} ${colorClasses}
       `}
     >
-      {score >= 0.65 ? 'X' : '>'}
+      {isBlocked || score >= 0.65 ? 'X' : '>'}
       <span>{label}</span>
       <span className="opacity-80">[{formatRiskScore(score)}]</span>
     </span>

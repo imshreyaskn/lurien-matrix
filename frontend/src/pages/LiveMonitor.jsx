@@ -133,7 +133,7 @@ export default function LiveMonitor() {
                   <span className={`text-xs font-mono tracking-widest uppercase ${!log.safe ? 'text-luma-000' : 'text-luma-500'}`}>
                     {formatTime(log.timestamp)}
                   </span>
-                  <RiskBadge score={log.risk_score} size="sm" />
+                  <RiskBadge score={log.risk_score} isBlocked={!log.safe} size="sm" />
                 </div>
                 <div className="flex items-center gap-2">
                   {!log.safe ? (
