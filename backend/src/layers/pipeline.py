@@ -226,19 +226,23 @@ class ClassifierPipeline:
         # ── Layer 2.5: OpenAI Moderation (Optional) ────────────────
         if self.openai_moderation and self.openai_moderation.enabled and use_openai_moderation:
             om_res = self.openai_moderation.analyze(text)
+            
+            # Apply our own threshold override, treating high scores as triggers even if OpenAI didn't 'flag' it
+            is_om_triggered = om_res.triggered or (om_res.score >= threshold)
+            
             layers_data["openai_moderation"] = {
                 "ran": True,
-                "triggered": om_res.triggered,
+                "triggered": is_om_triggered,
                 "score": om_res.score,
                 "flagged_category": om_res.flagged_category,
                 "latency_ms": om_res.latency_ms
             }
-            if om_res.triggered:
+            if is_om_triggered:
                 return build_short_circuit(
                     flagged_name="openai_moderation",
                     risk=om_res.score,
                     attack=om_res.flagged_category or "openai_moderation_flag",
-                    pattern="OpenAI omni-moderation-latest flag",
+                    pattern="OpenAI moderation threshold exceeded",
                     running_layers=layers_data
                 )
         else:
@@ -290,6 +294,8 @@ class ClassifierPipeline:
 
         # ── All Layers Passed (SAFE) ───────────────────────────────
         scores = [heuristic_res.score, embedding_res.similarity_score]
+        if "openai_moderation" in layers_data and layers_data["openai_moderation"]["ran"]:
+            scores.append(layers_data["openai_moderation"]["score"])
         if ml_res.ran and ml_res.all_scores:
             scores.append(ml_res.all_scores.get("injection", 0.0))
         risk_score = round(max(scores), 4)
