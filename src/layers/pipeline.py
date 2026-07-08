@@ -266,7 +266,7 @@ class ClassifierPipeline:
         # ── All Layers Passed (SAFE) ───────────────────────────────
         scores = [heuristic_res.score, embedding_res.similarity_score]
         if ml_res.ran and ml_res.all_scores:
-            scores.append(ml_res.all_scores.get("injection", 0.0))
+            scores.append(1.0 - ml_res.all_scores.get("safe", 1.0))
         risk_score = round(max(scores), 4)
 
         return PipelineResult(

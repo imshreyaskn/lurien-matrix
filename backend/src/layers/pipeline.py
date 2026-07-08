@@ -245,7 +245,7 @@ class ClassifierPipeline:
             warnings.append(ml_res.warning)
 
         if ml_res.ran and ml_res.all_scores:
-            current_risk = update_risk(ml_res.all_scores.get("injection", 0.0))
+            current_risk = update_risk(1.0 - ml_res.all_scores.get("safe", 1.0))
         else:
             current_risk = cumulative_risk
             

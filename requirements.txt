@@ -9,11 +9,11 @@ pydantic==2.10.4
 pydantic-settings==2.7.1
 transformers==4.46.3
 torch==2.6.0
-safetensors==0.4.5
+safetensors
 numpy==2.2.1
 python-multipart==0.0.20
-optimum[onnxruntime]==1.23.3
-onnx==1.17.0
+optimum[onnxruntime]
+onnx
 sentence-transformers==3.4.0
-faiss-cpu==1.9.0
+faiss-cpu>=1.9.0.post1
 scikit-learn==1.6.0

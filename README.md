@@ -1,3 +1,11 @@
+---
+title: Lurien Matrix
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
 # Lurien Matrix — Production-Grade Prompt Injection Protection
 
 Lurien Matrix is a production-grade, true proxy-based firewall (not just a classifier) that sits as a live proxy between your application and any LLM API (OpenAI, Gemini, Claude, Groq), intercepting and blocking malicious prompts in real-time before they ever reach the model.

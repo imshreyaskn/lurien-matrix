@@ -17,7 +17,11 @@ logger = logging.getLogger("llm_firewall.classifier")
 # Labels for the binary classification model
 LABELS = [
     "safe",
-    "injection",
+    "role_override",
+    "goal_hijacking",
+    "context_poisoning",
+    "tool_manipulation",
+    "cascading_amplification",
 ]
 
 LABEL_TO_IDX = {label: idx for idx, label in enumerate(LABELS)}
@@ -90,6 +94,7 @@ class InjectionClassifier:
             self.model = ORTModelForSequenceClassification.from_pretrained(
                 model_dir,
                 provider="CPUExecutionProvider",
+                file_name="model_quantized.onnx",
             )
 
             self._loaded = True

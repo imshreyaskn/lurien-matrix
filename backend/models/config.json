@@ -1,25 +1,51 @@
 {
-  "activation": "gelu",
+  "_name_or_path": "/content/drive/MyDrive/lurien_6class/lurien-6class-onnx_v2",
   "architectures": [
-    "DistilBertForSequenceClassification"
+    "DebertaV2ForSequenceClassification"
   ],
-  "attention_dropout": 0.1,
-  "dim": 768,
-  "dropout": 0.1,
-  "dtype": "float32",
-  "hidden_dim": 3072,
+  "attention_probs_dropout_prob": 0.1,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "safe",
+    "1": "role_override",
+    "2": "goal_hijacking",
+    "3": "context_poisoning",
+    "4": "tool_manipulation",
+    "5": "cascading_amplification"
+  },
   "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "label2id": {
+    "cascading_amplification": 5,
+    "context_poisoning": 3,
+    "goal_hijacking": 2,
+    "role_override": 1,
+    "safe": 0,
+    "tool_manipulation": 4
+  },
+  "layer_norm_eps": 1e-07,
   "max_position_embeddings": 512,
-  "model_type": "distilbert",
-  "n_heads": 12,
-  "n_layers": 6,
+  "max_relative_positions": -1,
+  "model_type": "deberta-v2",
+  "norm_rel_ebd": "layer_norm",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 6,
   "pad_token_id": 0,
-  "problem_type": "single_label_classification",
-  "qa_dropout": 0.1,
-  "seq_classif_dropout": 0.2,
-  "sinusoidal_pos_embds": false,
-  "tie_weights_": true,
-  "transformers_version": "4.57.6",
-  "use_cache": false,
-  "vocab_size": 30522
+  "pooler_dropout": 0,
+  "pooler_hidden_act": "gelu",
+  "pooler_hidden_size": 768,
+  "pos_att_type": [
+    "p2c",
+    "c2p"
+  ],
+  "position_biased_input": false,
+  "position_buckets": 256,
+  "relative_attention": true,
+  "share_att_key": true,
+  "torch_dtype": "float32",
+  "transformers_version": "4.46.3",
+  "type_vocab_size": 0,
+  "vocab_size": 128100
 }

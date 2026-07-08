@@ -1,0 +1,45 @@
+{
+  "model": "microsoft/deberta-v3-small",
+  "max_length": 256,
+  "version": "3.0.0",
+  "num_labels": 6,
+  "labels": [
+    "safe",
+    "role_override",
+    "goal_hijacking",
+    "context_poisoning",
+    "tool_manipulation",
+    "cascading_amplification"
+  ],
+  "label2id": {
+    "safe": 0,
+    "role_override": 1,
+    "goal_hijacking": 2,
+    "context_poisoning": 3,
+    "tool_manipulation": 4,
+    "cascading_amplification": 5
+  },
+  "id2label": {
+    "0": "safe",
+    "1": "role_override",
+    "2": "goal_hijacking",
+    "3": "context_poisoning",
+    "4": "tool_manipulation",
+    "5": "cascading_amplification"
+  },
+  "augmentations": [
+    "base64",
+    "cyrillic_homoglyphs",
+    "rot13",
+    "zwsp"
+  ],
+  "schema": "6-class",
+  "classes": {
+    "0": "safe \u2014 no injection detected",
+    "1": "role_override \u2014 DAN, persona hijacking, direct jailbreaks",
+    "2": "goal_hijacking \u2014 hidden malicious secondary objective",
+    "3": "context_poisoning \u2014 false authority/privilege in retrieved context",
+    "4": "tool_manipulation \u2014 malicious tool call parameters",
+    "5": "cascading_amplification \u2014 multi-stage escalation attacks"
+  }
+}
