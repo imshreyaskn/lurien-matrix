@@ -170,6 +170,8 @@ async def lifespan(app: FastAPI):
 
 # ── FastAPI App ───────────────────────────────────────────────
 
+is_prod = os.getenv("ENVIRONMENT", "development") == "production"
+
 app = FastAPI(
     title="LLM Firewall",
     description=(
@@ -180,8 +182,8 @@ app = FastAPI(
     ),
     version="1.0.0",
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None if is_prod else "/docs",
+    redoc_url=None if is_prod else "/redoc",
 )
 
 # ── CORS ──────────────────────────────────────────────────────

@@ -6,7 +6,7 @@ async function runLiveTests() {
   
   // Use the real API key. Default baseUrl is the live HF space
   const fw = new LurienMatrix({ 
-    apiKey: 'fw_live_ef00ee83f7e9fdf1e9ec28769454f768186b1a20bf22083d992bdea788463f64',
+    apiKey: process.env.FW_API_KEY || 'fw_live_dummy',
     // Uncomment this if you want to hit the local backend instead of the live space:
     // baseUrl: 'http://localhost:8000' 
   });
@@ -43,7 +43,7 @@ async function runLiveTests() {
   // Pattern 3: Proxy Mode
   console.log("Test Pattern 3: Proxy Mode (Malicious)");
   const fwProxy = new LurienMatrix({
-    apiKey: 'fw_live_ef00ee83f7e9fdf1e9ec28769454f768186b1a20bf22083d992bdea788463f64',
+    apiKey: process.env.FW_API_KEY || 'fw_live_dummy',
     mode: "proxy",
     provider: "openai",
     llmApiKey: "sk-dummy-key-because-we-expect-block" 

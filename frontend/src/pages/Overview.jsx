@@ -7,6 +7,7 @@ import RiskBadge from '../components/RiskBadge';
 import AttackChip from '../components/AttackChip';
 import LogDrawer from '../components/LogDrawer';
 import { formatNumber, formatMs, formatTime, formatAttackType, getAttackColor, timeAgo } from '../utils/formatters';
+import { CHART_THEME } from '../utils/theme';
 
 
 
@@ -43,13 +44,13 @@ export default function Overview() {
     : [];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-light text-luma-FFF font-sans tracking-widest uppercase">
-          Lurien <span className="font-bold text-accent-gold tracking-widest">Core</span>
+        <h1 className="display-text text-luma-FFF font-sans uppercase">
+          Lurien <span className="font-bold text-accent-gold">Core</span>
         </h1>
-        <p className="text-luma-500 mt-1 font-mono text-sm tracking-widest uppercase">Real-time threat matrix telemetry</p>
+        <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">Real-time threat matrix telemetry</p>
       </div>
 
       {(statsError || logsError) && (
@@ -60,7 +61,7 @@ export default function Overview() {
       )}
 
       {/* Hero Metrics */}
-      <div className="grid grid-cols-4 gap-0 border border-luma-300">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-luma-300 border border-luma-300">
         <MetricCard
           label="INGRESS REQ"
           value={formatNumber(stats?.total_checks || 0)}
@@ -88,7 +89,7 @@ export default function Overview() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Donut Chart */}
         <div className="border border-luma-300 bg-luma-000 p-6">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">
@@ -111,10 +112,7 @@ export default function Overview() {
                         <Cell key={i} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{ background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: '8px' }}
-                      labelStyle={{ color: '#E0E0E0' }}
-                    />
+                    <Tooltip {...CHART_THEME.tooltip} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -173,7 +171,7 @@ export default function Overview() {
             Ingress Terminal Feed
           </h3>
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-luma-FFF animate-flicker" />
+            <div className="w-1.5 h-1.5 bg-status-online" />
             <span className="text-xs text-luma-500 font-mono tracking-widest uppercase">Live Stream</span>
           </div>
         </div>
@@ -181,10 +179,10 @@ export default function Overview() {
         {logs.length > 0 ? (
           <div className="space-y-0 border-t border-luma-300">
             {logs.map((log, i) => (
-              <div
+              <button
                 key={log.request_id || i}
                 onClick={() => setSelectedLog(log)}
-                className={`flex items-center gap-4 py-3 cursor-pointer border-b border-luma-300 transition-all hover:bg-luma-100 ${
+                className={`w-full flex items-center gap-4 py-3 px-4 cursor-pointer border-b border-luma-300 transition-transform hover:-translate-y-px hover:bg-luma-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent-gold ${
                   !log.safe ? 'text-luma-FFF' : 'text-luma-500'
                 }`}
               >
@@ -202,7 +200,7 @@ export default function Overview() {
                 <span className="text-xs font-mono tracking-widest uppercase w-16 text-right">
                   {log.provider || 'CHK'}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -224,14 +222,14 @@ export default function Overview() {
 
 function MetricCard({ label, value, delta, highlight }) {
   return (
-    <div className={`p-5 border-r border-b border-luma-300 bg-luma-000 flex flex-col justify-between ${highlight ? 'accent-node !bg-accent-gold' : ''}`}>
-      <span className={`text-xs font-bold uppercase tracking-widest ${highlight ? 'text-luma-000' : 'text-luma-700'}`}>
+    <div className={`p-4 md:p-6 bg-luma-000 flex flex-col justify-between min-h-[120px] transition-transform hover:-translate-y-px ${highlight ? 'border-l-4 border-accent-gold bg-accent-gold/5' : ''}`}>
+      <span className={`text-xs font-bold uppercase tracking-widest ${highlight ? 'text-accent-gold' : 'text-luma-700'}`}>
         {label}
       </span>
-      <div className={`text-4xl font-light font-mono mt-4 ${highlight ? 'text-luma-000' : 'text-luma-FFF'}`}>
+      <div className="text-[36px] font-semibold font-mono mt-4 tabular-nums text-luma-FFF leading-none">
         {value}
       </div>
-      <div className={`text-xs font-mono tracking-widest mt-2 ${highlight ? 'text-luma-300' : 'text-luma-500'}`}>
+      <div className={`text-xs font-mono tracking-widest mt-2 ${highlight ? 'text-accent-gold/80' : 'text-luma-500'}`}>
         {delta}
       </div>
     </div>

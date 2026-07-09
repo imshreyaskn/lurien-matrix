@@ -6,7 +6,8 @@ All API request validation and response serialization models.
 
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
+import re
 
 
 # ── Request Schemas ───────────────────────────────────────────
@@ -39,7 +40,17 @@ class CheckRequest(BaseModel):
 
 class BatchCheckRequest(BaseModel):
     """Request body for POST /v1/check/batch"""
-    prompts: list[str] = Field(..., min_length=1, max_length=50)
+    prompts: list[str] = Field(..., min_length=1, max_length=10)
+
+    @field_validator("prompts")
+    @classmethod
+    def prompts_not_empty_and_bounded(cls, v: list[str]) -> list[str]:
+        for p in v:
+            if not p.strip():
+                raise ValueError("prompt cannot be empty or whitespace only")
+            if len(p) > 10000:
+                raise ValueError("prompt exceeds 10000 character limit")
+        return v
 
 
 
@@ -222,8 +233,19 @@ class RateLimitResponse(BaseModel):
 # ── Auth Schemas ──────────────────────────────────────────────
 
 class UserCreate(BaseModel):
-    email: str = Field(..., max_length=255)
-    password: str = Field(..., min_length=6, max_length=128)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r'\d', v):
+            raise ValueError("Password must contain at least one number")
+        return v
 
 
 class UserLogin(BaseModel):

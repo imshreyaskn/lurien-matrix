@@ -129,14 +129,14 @@ export default function ApiKeys() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-light text-luma-FFF font-sans tracking-widest uppercase">
-            System <span className="font-bold text-accent-gold tracking-widest">Auth</span>
+          <h1 className="display-text text-luma-FFF font-sans uppercase">
+            System <span className="font-bold text-accent-gold">Auth</span>
           </h1>
-          <p className="text-luma-500 mt-1 font-mono text-sm tracking-widest uppercase">Access tokens and integration nodes</p>
+          <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">Access tokens and integration nodes</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}

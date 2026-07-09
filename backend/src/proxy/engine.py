@@ -248,6 +248,8 @@ class ProxyEngine:
         # Handle Gemini model-specific URL
         if provider == "gemini":
             model = body.get("model", "gemini-pro")
+            if model not in ["gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-ultra", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"]:
+                raise ValueError("Invalid Gemini model specified")
             url = url.format(model=model)
 
         # Build headers
@@ -359,8 +361,6 @@ class ProxyEngine:
         
         chunks = []
         async for chunk in response.aiter_bytes():
-            yield chunk
-            
             if req_id and self.output_monitor:
                 chunks.append(chunk)
                 # Parse current accumulated text
@@ -397,3 +397,7 @@ class ProxyEngine:
                     error_json = json.dumps({"error": "response_blocked", "reason": output_result.reason})
                     yield f"\n\ndata: {error_json}\n\n".encode("utf-8")
                     break
+                else:
+                    yield chunk
+            else:
+                yield chunk

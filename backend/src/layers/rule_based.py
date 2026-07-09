@@ -69,7 +69,7 @@ PATTERNS: dict[str, list[tuple[str, str]]] = {
         (r"system\s+prompt\s+word\s+for\s+word", "exact system prompt extraction"),
     ],
     "ENCODING_ATTACKS": [
-        (r"[A-Za-z0-9+/]{50,}={0,2}", "base64 encoded content"),
+        (r"[A-Za-z0-9+/]{50,1000}={0,2}", "base64 encoded content"),
         (r"(\\x[0-9a-fA-F]{2}){5,}", "hex encoded content"),
         (r"&#x?[0-9a-fA-F]+;", "HTML entity encoding"),
     ],
@@ -129,7 +129,8 @@ class RuleBasedLayer:
 
         # ── Unicode Lookalike Normalization ──
         # NFKD normalizes mathematical bold/script letters, fullwidth chars, accents, homoglyphs, etc.
-        text_normalized = unicodedata.normalize('NFKD', text)
+        # Also strip zero-width joiners and soft hyphens to prevent E3 bypasses.
+        text_normalized = unicodedata.normalize('NFKD', text).replace('\u200d', '').replace('\u00ad', '')
         text_lower = text_normalized.lower()
 
         # ── Check reversed text attacks ──

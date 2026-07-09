@@ -1,5 +1,5 @@
 import os
-import pickle
+import json
 import numpy as np
 import faiss
 import pandas as pd
@@ -108,11 +108,11 @@ index = faiss.IndexFlatIP(dimension)
 index.add(embeddings)
 
 index_path = os.path.join(OUT_DIR, "attack_index.faiss")
-texts_path = os.path.join(OUT_DIR, "attack_texts.pkl")
+texts_path = os.path.join(OUT_DIR, "attack_texts.json")
 
 faiss.write_index(index, index_path)
-with open(texts_path, "wb") as f:
-    pickle.dump(attack_texts, f)
+with open(texts_path, "w", encoding="utf-8") as f:
+    json.dump(attack_texts, f, ensure_ascii=False, indent=2)
 
 print(f"Index built: {index.ntotal} vectors, dim={dimension}")
 print(f"Saved index to {index_path}")

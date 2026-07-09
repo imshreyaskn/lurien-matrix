@@ -5,7 +5,11 @@ services:
     image: mongo:latest
     container_name: llm_mongo
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password_change_me
+    command: ["--auth"]
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
@@ -14,7 +18,8 @@ services:
     image: redis:alpine
     container_name: llm_redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--requirepass", "password_change_me"]
     restart: unless-stopped
 
 volumes:
