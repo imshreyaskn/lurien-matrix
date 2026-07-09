@@ -95,7 +95,7 @@ export default function Logs() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setRefreshTrigger(p => p + 1)}
-            className="p-2.5 border border-luma-300 bg-luma-000 text-luma-700 hover:text-luma-FFF hover:bg-luma-100 transition-colors"
+            className="p-2.5 bg-white/5 border border-white/10 rounded-md text-luma-700 hover:text-luma-FFF hover:bg-white/10 backdrop-blur-md transition-colors shadow-lg"
             title="Refresh logs"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -103,7 +103,7 @@ export default function Logs() {
           <button
             onClick={handleExportCSV}
             disabled={logs.length === 0}
-            className="px-4 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-accent-gold/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold rounded-md shadow-[0_0_20px_rgba(212,184,158,0.2)] text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-accent-gold/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
             EXPORT CSV
@@ -112,13 +112,13 @@ export default function Logs() {
       </div>
 
       {/* Filters */}
-      <div className="border border-luma-300 bg-luma-000 p-4 grid grid-cols-5 gap-4 items-center">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg p-5 grid grid-cols-5 gap-4 items-center shadow-xl">
         <div>
           <label className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1 block">Vector Class</label>
           <select
             value={attackType}
             onChange={(e) => { setAttackType(e.target.value); setPage(1); }}
-            className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase tracking-widest"
+            className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-500 uppercase tracking-widest transition-colors"
           >
             <option value="">ALL VECTORS</option>
             <option value="DIRECT_INJECTION">DIRECT INJECTION</option>
@@ -139,7 +139,7 @@ export default function Logs() {
           <select
             value={flaggedLayer}
             onChange={(e) => { setFlaggedLayer(e.target.value); setPage(1); }}
-            className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase tracking-widest"
+            className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm font-mono text-luma-FFF focus:outline-none focus:border-luma-500 uppercase tracking-widest transition-colors"
           >
             <option value="">ALL LAYERS</option>
             <option value="canary">L0 CANARY</option>
@@ -174,11 +174,11 @@ export default function Logs() {
       </div>
 
       {/* Logs Table */}
-      <div className="border border-luma-300 bg-luma-000 overflow-hidden">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-luma-100 border-b border-luma-300 text-xs font-bold text-luma-500 tracking-widest uppercase font-mono">
+              <tr className="bg-black/20 border-b border-white/5 text-xs font-bold text-luma-500 tracking-widest uppercase font-mono">
                 <th className="p-4 w-28">TIMESTAMP</th>
                 <th className="p-4">REQUEST_ID</th>
                 <th className="p-4 w-24">STATUS</th>
@@ -189,7 +189,7 @@ export default function Logs() {
                 <th className="p-4 w-16">VIEW</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-luma-300 text-xs font-mono tracking-widest uppercase">
+            <tbody className="divide-y divide-white/5 text-xs font-mono tracking-widest uppercase">
               {logs.map((log) => (
                 <tr
                   key={log.request_id}
@@ -227,7 +227,7 @@ export default function Logs() {
                   <td className="p-4">
                     <button
                       onClick={() => setSelectedLog(log)}
-                      className="p-1 hover:bg-luma-300 text-luma-700 hover:text-luma-FFF transition-colors border border-transparent hover:border-luma-500"
+                      className="p-1.5 rounded-md hover:bg-white/10 text-luma-700 hover:text-luma-FFF transition-colors border border-transparent hover:border-white/20"
                       title="View Details"
                     >
                       <Eye className="w-4 h-4" />
@@ -248,7 +248,7 @@ export default function Logs() {
 
         {/* Pagination */}
         {pages > 1 && (
-          <div className="p-4 border-t border-luma-300 flex items-center justify-between">
+          <div className="p-4 border-t border-white/5 bg-black/10 flex items-center justify-between">
             <span className="text-xs text-luma-500 font-mono tracking-widest uppercase">
               PAGE {page} OF {pages} ({total} SIGNALS)
             </span>
@@ -256,14 +256,14 @@ export default function Logs() {
               <button
                 onClick={() => setPage(p => Math.max(p - 1, 1))}
                 disabled={page === 1}
-                className="p-2 border border-luma-300 bg-luma-000 text-luma-700 hover:text-luma-FFF disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 border border-white/10 bg-black/20 rounded-md text-luma-700 hover:text-luma-FFF hover:bg-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setPage(p => Math.min(p + 1, pages))}
                 disabled={page === pages}
-                className="p-2 border border-luma-300 bg-luma-000 text-luma-700 hover:text-luma-FFF disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 border border-white/10 bg-black/20 rounded-md text-luma-700 hover:text-luma-FFF hover:bg-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <ArrowRight className="w-4 h-4" />
               </button>

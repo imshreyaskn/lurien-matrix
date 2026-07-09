@@ -80,20 +80,20 @@ export default function LiveMonitor() {
           </h1>
           <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">Real-time telemetry stream</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 border border-luma-500 bg-luma-100">
-          <div className="w-2 h-2 bg-status-online" />
+        <div className="flex items-center gap-2 px-4 py-2 border border-white/10 bg-white/5 rounded-full backdrop-blur-md shadow-lg">
+          <div className="w-2 h-2 rounded-full bg-status-online shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
           <span className="text-xs font-mono tracking-widest uppercase text-luma-FFF">Sys_Status: Active</span>
         </div>
       </div>
 
       {/* 6-Layer Status Bar */}
-      <div className="p-4 flex flex-wrap justify-between items-center gap-3 border border-luma-300 bg-luma-100">
+      <div className="p-4 flex flex-wrap justify-between items-center gap-3 border border-white/5 bg-luma-100/40 backdrop-blur-2xl rounded-lg shadow-xl">
         <span className="text-xs font-bold text-luma-500 uppercase tracking-widest">Active Pipeline Layers:</span>
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold tracking-widest uppercase">
           {Object.entries(LAYER).map(([key, layer], index, arr) => (
             <div key={key} className="flex items-center gap-2">
               <span 
-                className="px-2 py-0.5 border"
+                className="px-2 py-1 rounded-md border shadow-sm"
                 style={{ backgroundColor: layer.bg, borderColor: layer.border, color: layer.text }}
               >
                 {layer.label}
@@ -107,8 +107,8 @@ export default function LiveMonitor() {
       {/* Main Content: Split Screen */}
       <div className="grid grid-cols-5 gap-6">
         {/* Left Panel: Scrolling Log */}
-        <div className="col-span-2 border border-luma-300 bg-luma-000 flex flex-col max-h-[500px]">
-          <div className="p-4 border-b border-luma-300 flex items-center justify-between bg-luma-100">
+        <div className="col-span-2 border border-white/5 bg-luma-100/40 backdrop-blur-2xl rounded-lg flex flex-col max-h-[500px] shadow-xl overflow-hidden">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
             <h3 className="text-xs font-bold text-luma-FFF tracking-widest uppercase">
               REQUEST_STREAM
             </h3>
@@ -120,12 +120,12 @@ export default function LiveMonitor() {
             {logs.length > 0 ? logs.map((log, i) => (
               <div
                 key={log.request_id || i}
-                className={`p-3 border transition-all text-sm ${
+                className={`p-3 border rounded-md shadow-sm transition-all text-sm backdrop-blur-md ${
                   !log.safe
-                    ? 'bg-accent-gold border-accent-gold text-luma-000 animate-fade-in'
+                    ? 'bg-accent-gold border-accent-gold text-luma-000 animate-fade-in shadow-[0_0_15px_rgba(212,184,158,0.3)]'
                     : log.risk_score >= 0.35
-                    ? 'bg-luma-100 border-luma-500 text-luma-FFF'
-                    : 'bg-luma-000 border-luma-300 text-luma-700'
+                    ? 'bg-black/40 border-white/20 text-luma-FFF'
+                    : 'bg-black/20 border-white/5 text-luma-500 hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -161,12 +161,12 @@ export default function LiveMonitor() {
         </div>
 
         {/* Right Panel: D3 Live Graph */}
-        <div className="col-span-3 border border-luma-300 bg-luma-000 p-4">
-          <div className="flex items-center justify-between mb-4 border-b border-luma-300 pb-2">
+        <div className="col-span-3 border border-white/5 bg-luma-100/40 backdrop-blur-2xl rounded-lg p-4 shadow-xl">
+          <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
             <h3 className="text-xs font-bold text-luma-FFF tracking-widest uppercase">
               TOPOLOGY_GRAPH
             </h3>
-            <div className="text-xs text-luma-500 font-mono tracking-widest uppercase">
+            <div className="text-xs text-luma-500 font-mono tracking-widest uppercase bg-black/20 px-3 py-1 rounded-full border border-white/5">
               {events.length} EVENTS TRACKED
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function LiveMonitor() {
       </div>
 
       {/* Live Stats Bar */}
-      <div className="border border-luma-300 bg-luma-100 p-4">
+      <div className="border border-white/5 bg-black/20 backdrop-blur-2xl rounded-lg p-5 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <StatItem
