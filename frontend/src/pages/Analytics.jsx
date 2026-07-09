@@ -30,7 +30,7 @@ export default function Analytics() {
           value,
           fill: LURIEN_COLORS[i % LURIEN_COLORS.length],
         }))
-        .sort((a, b) => b.value - a.value)
+        .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
     : [];
 
   // 2. Risk Score Distribution
