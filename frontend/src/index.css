@@ -48,7 +48,7 @@ body {
   .auth-card {
     background: #000000;
     border: 1px solid #333333;
-    border-radius: 0;
+    border-radius: 0.5rem;
   }
 
   /* Keep legacy utility class names but strip their color */
@@ -68,7 +68,7 @@ body {
     background-color: #FFFFFF;
     color: #000000;
     font-weight: bold;
-    border-radius: 0;
+    border-radius: 0.375rem;
     text-transform: uppercase;
   }
   
