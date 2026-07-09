@@ -19,9 +19,9 @@ export default function LogDrawer({ log, onClose }) {
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full md:w-[500px] bg-luma-000 border-l border-luma-300 z-50 animate-slide-in overflow-y-auto">
+      <div className="fixed right-0 md:right-4 top-0 md:top-4 bottom-0 md:bottom-4 h-full md:h-[calc(100%-32px)] w-full md:w-[500px] bg-luma-100/40 backdrop-blur-3xl border-l md:border border-white/5 md:rounded-lg z-50 animate-slide-in overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-luma-000 border-b border-luma-300 p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-black/20 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between z-10">
           <div>
             <h2 className="text-xs font-bold tracking-widest text-luma-FFF uppercase">PAYLOAD TELEMETRY</h2>
             <p className="text-xs font-mono text-luma-500 mt-0.5 tracking-widest uppercase">
@@ -56,11 +56,11 @@ export default function LogDrawer({ log, onClose }) {
           {/* Flagged Pattern */}
           {log.flagged_pattern && (
             <div>
-              <h3 className="text-xs font-bold text-luma-700 uppercase tracking-widest mb-2">
+              <h3 className="text-xs font-bold text-firewall-red uppercase tracking-widest mb-2">
                 FLAGGED SIGNATURE
               </h3>
-              <div className="bg-luma-000 border border-luma-FFF p-3">
-                <code className="text-xs text-luma-FFF font-mono tracking-widest uppercase break-all">
+              <div className="bg-firewall-red/10 border border-firewall-red/30 rounded-lg p-3">
+                <code className="text-xs text-firewall-red font-mono tracking-widest uppercase break-all">
                   {log.flagged_pattern}
                 </code>
               </div>
@@ -87,7 +87,7 @@ export default function LogDrawer({ log, onClose }) {
                     <span className="text-xs text-luma-500 font-mono tracking-widest uppercase w-40 truncate">
                       {key.replace(/_/g, ' ')}
                     </span>
-                    <div className="flex-1 h-1 bg-luma-100 overflow-hidden border border-luma-300">
+                    <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
                       <div
                         className="h-full transition-all duration-500 bg-luma-FFF"
                         style={{ width: `${(val * 100).toFixed(0)}%` }}
@@ -114,7 +114,7 @@ export default function LogDrawer({ log, onClose }) {
                   .map(([cls, score]) => (
                     <div key={cls} className="flex items-center gap-3">
                       <span className="text-xs text-luma-500 font-mono tracking-widest uppercase w-32 truncate">{cls}</span>
-                      <div className="flex-1 h-1 bg-luma-100 overflow-hidden border border-luma-300">
+                      <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
                         <div
                           className="h-full bg-luma-FFF transition-all duration-500"
                           style={{ width: `${(score * 100).toFixed(0)}%` }}
@@ -146,7 +146,7 @@ export default function LogDrawer({ log, onClose }) {
 
 function MetaItem({ label, value }) {
   return (
-    <div className="bg-luma-100 p-3 border border-luma-300">
+    <div className="bg-white/5 p-3 rounded-lg border border-white/10 shadow-inner">
       <div className="text-xs font-bold text-luma-500 tracking-widest uppercase mb-1">{label}</div>
       <div className="text-xs font-mono font-bold text-luma-FFF uppercase truncate tracking-widest">{value}</div>
     </div>

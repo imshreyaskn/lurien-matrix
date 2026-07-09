@@ -113,10 +113,10 @@ function LayerRow({ name, number, color, ran, triggered, score, latency, detail 
   const opacity = isSkipped ? 'opacity-30' : 'opacity-100';
 
   return (
-    <div className={`flex items-center gap-3 py-2 border-b border-luma-300 ${opacity}`}>
+    <div className={`flex items-center gap-3 py-3 px-3 mb-2 bg-black/20 border border-white/5 rounded-lg backdrop-blur-md ${opacity}`}>
       {/* Number badge */}
       <div 
-        className={`w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0 font-mono border`}
+        className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold shrink-0 font-mono border`}
         style={!isSkipped ? {
           backgroundColor: color.bg,
           borderColor: color.border,
