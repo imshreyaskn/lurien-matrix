@@ -18,7 +18,7 @@ def generate_api_key() -> str:
 
 def hash_api_key(key: str) -> str:
     """Hash an API key for storage using HMAC-SHA256 (never store raw keys)."""
-    pepper = os.getenv("API_KEY_PEPPER", "default-fallback-pepper-lurien-2026")
+    pepper = os.getenv("API_KEY_PEPPER", "change_me_to_a_random_string_in_production")
     return hmac.new(
         pepper.encode("utf-8"),
         key.encode("utf-8"),
