@@ -1,9 +1,9 @@
+import { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Shield, Activity, BarChart3, Key, FileText } from 'lucide-react';
+import { Shield, Activity, BarChart3, Key, FileText, LogOut } from 'lucide-react';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { LogOut } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: Shield, label: 'OVERVIEW' },
@@ -18,6 +18,7 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   
   const activeLayers = healthData?.active_layers || 6;
+  const sessionId = useMemo(() => Math.random().toString(36).substring(2, 10).toUpperCase(), []);
 
   return (
     <aside className="hidden md:flex w-64 h-screen bg-luma-000 border-r border-luma-300 flex-col shrink-0 font-mono z-50">
@@ -64,13 +65,13 @@ export default function Sidebar() {
         <div className="border border-luma-300 bg-luma-000 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-luma-500 uppercase tracking-widest">Sys_Status</span>
-            <div className={`w-2 h-2 animate-flicker ${error ? 'bg-[#EF4444]' : 'bg-[#10B981]'}`} style={{ boxShadow: error ? '0 0 8px #EF4444' : '0 0 8px #10B981' }} />
+            <div className={`w-2 h-2 ${error ? 'bg-status-offline' : 'bg-status-online'}`} />
           </div>
-          <div className={`text-xs uppercase tracking-widest ${error ? 'text-firewall-red' : 'text-accent-gold'}`}>
+          <div className={`text-xs uppercase tracking-widest ${error ? 'text-status-offline' : 'text-accent-gold'}`}>
             {error ? 'OFFLINE / ERROR' : `ACTIVE / ${activeLayers}-LAYER`}
           </div>
-          <div className="text-[10px] text-luma-500 font-sans tracking-widest uppercase break-all">
-            ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}
+          <div className="text-[10px] text-luma-500 font-mono tracking-widest uppercase break-all">
+            ID: {sessionId}
           </div>
         </div>
       </div>

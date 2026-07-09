@@ -87,8 +87,12 @@ async def check_rate_limit(api_key_id: str) -> RateLimitStatus:
     Uses Redis INCR + EXPIRE for atomic sliding window counting.
     """
     if _redis is None:
-        # No Redis = no rate limiting (graceful degradation)
-        return RateLimitStatus(allowed=True, limit=0, remaining=0)
+        # No Redis = FAIL CLOSED (deny requests when Redis is down)
+        return RateLimitStatus(
+            allowed=False, 
+            limit_type="system_outage",
+            retry_after_seconds=30
+        )
 
     limits = RATE_LIMITS
     now = datetime.now(timezone.utc)

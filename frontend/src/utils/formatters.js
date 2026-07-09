@@ -65,22 +65,22 @@ export function truncate(str, maxLen = 30) {
  * Get color class based on risk score.
  */
 export function getRiskColor(score, isBlocked = false) {
-  if (isBlocked) return 'text-firewall-red';
+  if (isBlocked) return 'text-status-blocked';
   if (score === null || score === undefined || isNaN(score)) return 'text-luma-500';
-  if (score >= 0.65) return 'text-firewall-red';
-  if (score >= 0.35) return 'text-firewall-yellow';
-  return 'text-firewall-green';
+  if (score >= 0.65) return 'text-status-blocked';
+  if (score >= 0.35) return 'text-status-warn';
+  return 'text-status-safe';
 }
 
 /**
  * Get background color class based on risk score.
  */
 export function getRiskBg(score, isBlocked = false) {
-  if (isBlocked) return 'bg-firewall-red/10 border-firewall-red text-firewall-red';
+  if (isBlocked) return 'bg-firewall-red/10 border-firewall-red text-status-blocked';
   if (score === null || score === undefined || isNaN(score)) return 'bg-luma-100 border-luma-300 text-luma-500';
-  if (score >= 0.65) return 'bg-firewall-red/10 border-firewall-red text-firewall-red';
-  if (score >= 0.35) return 'bg-firewall-yellow/10 border-firewall-yellow text-firewall-yellow';
-  return 'bg-firewall-green/10 border-firewall-green text-firewall-green';
+  if (score >= 0.65) return 'bg-firewall-red/10 border-firewall-red text-status-blocked';
+  if (score >= 0.35) return 'bg-firewall-yellow/10 border-firewall-yellow text-status-warn';
+  return 'bg-firewall-green/10 border-firewall-green text-status-safe';
 }
 
 /**
@@ -121,38 +121,33 @@ export function formatAttackType(type) {
   return map[type] || type || '—';
 }
 
+import { THREAT } from './theme';
+
 export function getAttackColor(type) {
-  const defaultColor = { bg: '#111111', border: '#333333', text: '#AAAAAA' };
-  if (!type) return defaultColor;
+  if (!type) return THREAT.muted;
 
-  const red = { bg: 'rgba(155, 68, 68, 0.15)', border: '#9B4444', text: '#9B4444' };
-  const green = { bg: 'rgba(74, 124, 89, 0.15)', border: '#4A7C59', text: '#4A7C59' };
-  const yellow = { bg: 'rgba(200, 159, 60, 0.15)', border: '#C89F3C', text: '#C89F3C' };
-  const blue = { bg: 'rgba(69, 107, 125, 0.15)', border: '#456B7D', text: '#456B7D' };
-  const purple = { bg: 'rgba(107, 91, 149, 0.15)', border: '#6B5B95', text: '#6B5B95' };
-
-  if (type.startsWith("pii_detected:")) return red;
-  if (type.startsWith("refusal_bypass:")) return yellow;
-  if (type.startsWith("indirect_injection:")) return purple;
-  if (type.startsWith("canary_echo:")) return blue;
+  if (type.startsWith("pii_detected:")) return THREAT.red;
+  if (type.startsWith("refusal_bypass:")) return THREAT.amber;
+  if (type.startsWith("indirect_injection:")) return THREAT.purple;
+  if (type.startsWith("canary_echo:")) return THREAT.blue;
 
   const map = {
-    role_override: red,
-    goal_hijacking: yellow,
-    context_poisoning: purple,
-    tool_manipulation: blue,
-    cascading_amplification: yellow,
-    heuristic_composite: yellow,
-    prompt_extraction: purple,
-    jailbreak_paraphrase: blue,
-    out_of_scope: green,
-    DIRECT_INJECTION: red,
-    PERSONA_HIJACKING: yellow,
-    SYSTEM_OVERRIDE: purple,
-    ENCODING_ATTACKS: blue,
-    MANY_SHOT: red,
+    role_override: THREAT.red,
+    goal_hijacking: THREAT.amber,
+    context_poisoning: THREAT.purple,
+    tool_manipulation: THREAT.blue,
+    cascading_amplification: THREAT.amber,
+    heuristic_composite: THREAT.amber,
+    prompt_extraction: THREAT.purple,
+    jailbreak_paraphrase: THREAT.blue,
+    out_of_scope: THREAT.green,
+    DIRECT_INJECTION: THREAT.red,
+    PERSONA_HIJACKING: THREAT.amber,
+    SYSTEM_OVERRIDE: THREAT.purple,
+    ENCODING_ATTACKS: THREAT.blue,
+    MANY_SHOT: THREAT.red,
   };
-  return map[type] || defaultColor;
+  return map[type] || THREAT.muted;
 }
 
 /**

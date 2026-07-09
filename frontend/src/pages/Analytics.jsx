@@ -15,9 +15,9 @@ import { usePolling } from '../hooks/usePolling';
 import { api } from '../utils/api';
 import { formatAttackType, formatNumber } from '../utils/formatters';
 
-const LURIEN_COLORS = [
-  '#9B4444', '#C89F3C', '#4A7C59', '#456B7D', '#6B5B95', '#D4B89E', '#8C92AC'
-];
+import { CHART_THEME, THREAT_HEX } from '../utils/theme';
+
+const LURIEN_COLORS = THREAT_HEX;
 
 export default function Analytics() {
   const { data: stats, error, loading } = usePolling(() => api.getStats(), 5000);
@@ -52,58 +52,61 @@ export default function Analytics() {
   const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   // Helper to color-code heatmap cells based on count
-  const getHeatmapColorClass = (count) => {
-    if (count === 0) return 'bg-luma-000 border-luma-100';
-    if (count < 10) return 'bg-luma-300 border-luma-500';
-    if (count < 20) return 'bg-luma-500 border-luma-700';
-    if (count < 35) return 'bg-luma-700 border-luma-900';
-    return 'bg-luma-FFF border-luma-FFF animate-flicker';
+  const getCellColor = (count, maxCount) => {
+    if (count === 0) return 'bg-luma-100 border-luma-100'; // No activity
+
+    const intensity = count / maxCount;
+    if (intensity > 0.8) return 'bg-firewall-red border-firewall-red text-luma-FFF';
+    if (intensity > 0.5) return 'bg-firewall-red/80 border-firewall-red/80 text-luma-FFF';
+    if (intensity > 0.3) return 'bg-firewall-red/60 border-firewall-red/60 text-luma-FFF';
+    if (intensity > 0.1) return 'bg-firewall-red/40 border-firewall-red/40';
+    return 'bg-firewall-red/20 border-firewall-red/20';
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in">
+    <div className="space-y-8 pb-12 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-light text-luma-FFF font-sans tracking-widest uppercase">
-          Threat <span className="font-bold text-accent-gold tracking-widest">Analytics</span>
+        <h1 className="display-text text-luma-FFF font-sans uppercase">
+          Threat <span className="font-bold text-accent-gold">Analytics</span>
         </h1>
-        <p className="text-luma-500 mt-1 font-mono text-sm tracking-widest uppercase">
+        <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">
           Deep telemetry of vector attacks and tracking grids.
         </p>
       </div>
 
       {/* Hero Telemetry Cards */}
-      <div className="grid grid-cols-4 gap-0 border border-luma-300">
-        <div className="p-5 border-r border-luma-300 bg-luma-000 flex flex-col justify-between">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-luma-300 border border-luma-300">
+        <div className="p-4 md:p-6 bg-luma-000 flex flex-col justify-between min-h-[120px] transition-transform hover:-translate-y-px">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">TOTAL THREATS</div>
-          <div className="text-4xl font-light text-luma-FFF font-mono mt-4">
+          <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {formatNumber(stats?.flagged_count || 0)}
           </div>
           <div className="text-xs text-luma-500 font-mono tracking-widest mt-2">
             {stats?.flag_rate?.toFixed(1) || 0}% THREATS
           </div>
         </div>
-        <div className="p-5 border-r border-luma-300 bg-luma-000 flex flex-col justify-between">
+        <div className="p-4 md:p-6 bg-luma-000 flex flex-col justify-between min-h-[120px] transition-transform hover:-translate-y-px">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">AVG LATENCY</div>
-          <div className="text-4xl font-light text-luma-FFF font-mono mt-4">
+          <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {stats?.avg_processing_time_ms?.toFixed(1) || 0}MS
           </div>
           <div className="text-xs text-luma-500 font-mono tracking-widest mt-2">
             FASTEST PATH &lt;5MS
           </div>
         </div>
-        <div className="p-5 border-r border-luma-300 bg-luma-000 flex flex-col justify-between accent-node !bg-accent-gold">
-          <div className="text-xs text-luma-000 uppercase font-bold tracking-widest">SYS STATUS</div>
-          <div className={`text-4xl font-bold font-mono mt-4 text-luma-000`}>
+        <div className="p-4 md:p-6 bg-luma-000 flex flex-col justify-between min-h-[120px] border-l-4 border-accent-gold bg-accent-gold/5 transition-transform hover:-translate-y-px">
+          <div className="text-xs text-accent-gold uppercase font-bold tracking-widest">SYS STATUS</div>
+          <div className="text-[36px] font-semibold font-mono mt-4 text-luma-FFF tabular-nums leading-none">
             {loading && !stats ? '...' : error ? 'ERR' : 'ACTIVE'}
           </div>
-          <div className="text-xs text-luma-300 font-mono tracking-widest mt-2">
+          <div className="text-xs text-accent-gold/80 font-mono tracking-widest mt-2">
             {error ? 'API LOST' : 'MATRIX PIPELINE OK'}
           </div>
         </div>
-        <div className="p-5 bg-luma-000 flex flex-col justify-between">
+        <div className="p-4 md:p-6 bg-luma-000 flex flex-col justify-between min-h-[120px] transition-transform hover:-translate-y-px">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">ACTIVE VECTORS</div>
-          <div className="text-4xl font-light text-luma-FFF font-mono mt-4">
+          <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {attackData.length}
           </div>
           <div className="text-xs text-luma-500 font-mono tracking-widest mt-2">
@@ -124,18 +127,7 @@ export default function Analytics() {
                 <CartesianGrid strokeDasharray="1 3" stroke="#333333" vertical={false} />
                 <XAxis dataKey="date" stroke="#666666" fontSize={10} fontFamily="monospace" tickLine={false} />
                 <YAxis stroke="#666666" fontSize={10} fontFamily="monospace" tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#000000',
-                    border: '1px solid #FFFFFF',
-                    borderRadius: '0',
-                    color: '#FFFFFF',
-                    fontFamily: 'monospace',
-                    fontSize: '10px',
-                    textTransform: 'uppercase',
-                    boxShadow: 'none'
-                  }}
-                />
+                <Tooltip {...CHART_THEME.tooltip} />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '10px', paddingTop: '10px', fontFamily: 'monospace', textTransform: 'uppercase', color: '#AAAAAA' }} />
                 <Line isAnimationActive={false} type="step" dot={false} strokeWidth={1} name="Role Override" dataKey="role_override" stroke={LURIEN_COLORS[0]} />
                 <Line isAnimationActive={false} type="step" dot={false} strokeWidth={1} name="Goal Hijacking" dataKey="goal_hijacking" stroke={LURIEN_COLORS[1]} />
@@ -187,7 +179,7 @@ export default function Analytics() {
                         <div
                           key={h}
                           title={`${dayName} at ${h.toString().padStart(2, '0')}:00 - ${cell.count} threats`}
-                          className={`aspect-square w-full border ${getHeatmapColorClass(cell.count)}`}
+                          className={`aspect-square w-full border ${getCellColor(cell.count, 50)}`}
                         />
                       );
                     })}
@@ -219,7 +211,7 @@ export default function Analytics() {
       </div>
 
       {/* Row 3: Histogram of Risk Scores & Layer effectiveness */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Risk Score Histogram */}
         <div className="border border-luma-300 bg-luma-000 p-6">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2">
@@ -232,17 +224,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="1 3" stroke="#333333" vertical={false} />
                   <XAxis dataKey="range" stroke="#666666" fontSize={10} fontFamily="monospace" tickLine={false} />
                   <YAxis stroke="#666666" fontSize={10} fontFamily="monospace" tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                    contentStyle={{
-                      background: '#000000',
-                      border: '1px solid #FFFFFF',
-                      borderRadius: '0',
-                      color: '#FFFFFF',
-                      fontFamily: 'monospace',
-                      fontSize: '10px'
-                    }}
-                  />
+                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} {...CHART_THEME.tooltip} />
                   <Bar isAnimationActive={false} dataKey="count" fill="#D4B89E" maxBarSize={20} />
                 </BarChart>
               </ResponsiveContainer>

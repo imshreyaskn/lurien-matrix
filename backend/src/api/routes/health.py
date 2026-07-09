@@ -54,11 +54,5 @@ async def health_check(request: Request):
 
     return {
         "status": status,
-        "active_layers": 5 + (1 if classifier_loaded else 0),
-        "classifier_loaded": classifier_loaded,
-        "classifier_latency_ms": classifier_latency,
-        "db_connected": db_connected,
-        "redis_connected": redis_connected,
         "uptime_seconds": uptime,
-        "model_version": pipeline.model_version,
     }

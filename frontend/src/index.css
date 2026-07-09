@@ -4,17 +4,31 @@
 
 /* ── Global Styles ────────────────────────────────────── */
 
-
-
 body {
   background-color: #000000;
   color: #E0E0E0;
-  font-family: 'Manrope', sans-serif; /* Force Manrope everywhere by default */
-  -webkit-font-smoothing: none; /* Make it look sharper/more aliased like a terminal */
+  font-family: 'SF Pro', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-image: 
     radial-gradient(circle at center, transparent 0%, #000 100%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+}
+
+/* Global focus states for WCAG 2.4.7 */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #D4B89E;
+}
+
+/* ── Typography Scale ─────────────────────────────────── */
+@layer base {
+  h1, .display-text { @apply text-[48px] leading-none; }
+  h2, .title-text { @apply text-[28px] leading-tight; }
+  h3, .headline-text { @apply text-[18px] leading-snug; }
+  p, .body-text { @apply text-[14px] leading-normal; }
+  .label-text { @apply text-[12px] leading-none; }
+  .caption-text { @apply text-[10px] leading-none; }
 }
 
 /* ── Scrollbar ────────────────────────────────────────── */
@@ -39,16 +53,10 @@ body {
 /* ── Custom Utilities ─────────────────────────────────── */
 
 @layer utilities {
-  .glass {
-    /* No more glass. Just hard, stark black with a hairline border */
+  .auth-card {
     background: #000000;
     border: 1px solid #333333;
-    border-radius: 0; /* Override any rounded corners */
-  }
-
-  .glass-hover:hover {
-    background: #111111;
-    border-color: #AAAAAA;
+    border-radius: 0;
   }
 
   /* Keep legacy utility class names but strip their color */
@@ -78,11 +86,11 @@ body {
   }
 
   .structural-text {
-    font-family: 'Manrope', sans-serif;
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
     font-size: 100px;
     font-weight: 200;
     line-height: 0.8;
-    color: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.05);
     user-select: none;
     pointer-events: none;
     letter-spacing: -2px;
@@ -104,7 +112,7 @@ body {
   width: 100vw;
   height: 10vh;
   background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.02) 50%, rgba(255,255,255,0));
-  animation: scanline 8s linear infinite;
+  animation: scanline 16s linear 1;
   pointer-events: none;
   z-index: 9999;
 }

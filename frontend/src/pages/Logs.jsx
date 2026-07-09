@@ -83,14 +83,14 @@ export default function Logs() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-light text-luma-FFF font-sans tracking-widest uppercase">
-            Firewall <span className="font-bold text-accent-gold tracking-widest">Logs</span>
+          <h1 className="display-text text-luma-FFF font-sans uppercase">
+            Firewall <span className="font-bold text-accent-gold">Logs</span>
           </h1>
-          <p className="text-luma-500 mt-1 font-mono text-sm tracking-widest uppercase">Audit trail of all processed payloads</p>
+          <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">Audit trail of all processed payloads</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -207,7 +207,7 @@ export default function Logs() {
                     <span className={`inline-flex items-center px-2 py-0.5 text-xs font-bold border ${
                       log.safe 
                         ? 'border-luma-500 text-luma-500'
-                        : 'bg-accent-gold text-luma-000 border-accent-gold animate-flicker'
+                        : 'bg-status-blocked/10 text-status-blocked border-status-blocked'
                     }`}>
                       {log.safe ? 'SAFE' : 'BLOCKED'}
                     </span>

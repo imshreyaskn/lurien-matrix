@@ -7,6 +7,7 @@ import LiveTestWidget from '../components/LiveTestWidget';
 import RiskBadge from '../components/RiskBadge';
 import AttackChip from '../components/AttackChip';
 import { formatTime, formatMs, formatNumber, timeAgo } from '../utils/formatters';
+import { LAYER } from '../utils/theme';
 
 /**
  * Live Firewall Monitor — THE HACKATHON DEMO VIEW
@@ -70,17 +71,17 @@ export default function LiveMonitor() {
     : '0.0';
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-light text-luma-FFF font-sans tracking-widest uppercase">
-            Live <span className="font-bold text-accent-gold tracking-widest">Monitor</span>
+          <h1 className="display-text text-luma-FFF font-sans uppercase">
+            Live <span className="font-bold text-accent-gold">Monitor</span>
           </h1>
-          <p className="text-luma-500 mt-1 font-mono text-sm tracking-widest uppercase">Real-time telemetry stream</p>
+          <p className="text-luma-500 mt-1 font-mono text-sm tracking-wider uppercase">Real-time telemetry stream</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 border border-luma-500 bg-luma-100">
-          <div className="w-2 h-2 bg-[#10B981] animate-flicker" style={{ boxShadow: '0 0 8px #10B981' }} />
+          <div className="w-2 h-2 bg-status-online" />
           <span className="text-xs font-mono tracking-widest uppercase text-luma-FFF">Sys_Status: Active</span>
         </div>
       </div>
@@ -89,17 +90,17 @@ export default function LiveMonitor() {
       <div className="p-4 flex flex-wrap justify-between items-center gap-3 border border-luma-300 bg-luma-100">
         <span className="text-xs font-bold text-luma-500 uppercase tracking-widest">Active Pipeline Layers:</span>
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold tracking-widest uppercase">
-          <span className="px-2 py-0.5 border border-[#52495c] text-[#D1C4E9] bg-[#3a3242]">CANARY</span>
-          <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#5c3e3e] text-[#FFCDD2] bg-[#3a2727]">RULE-BASED</span>
-          <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#5c503e] text-[#FFE0B2] bg-[#3a3227]">HEURISTIC</span>
-          <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#5c563e] text-[#FFF9C4] bg-[#3a3627]">EMBEDDING</span>
-          <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#3e4d5c] text-[#B3E5FC] bg-[#27313a]">ML</span>
-          <span className="text-luma-500">➔</span>
-          <span className="px-2 py-0.5 border border-[#5c3e45] text-[#F8BBD0] bg-[#3a272b]">CONTEXT POLICY</span>
+          {Object.entries(LAYER).map(([key, layer], index, arr) => (
+            <div key={key} className="flex items-center gap-2">
+              <span 
+                className="px-2 py-0.5 border"
+                style={{ backgroundColor: layer.bg, borderColor: layer.border, color: layer.text }}
+              >
+                {layer.label}
+              </span>
+              {index < arr.length - 1 && <span className="text-luma-500">➔</span>}
+            </div>
+          ))}
         </div>
       </div>
 

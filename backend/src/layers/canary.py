@@ -52,7 +52,7 @@ class CanaryTokenDetector:
             if hmac.compare_digest(
                 canary.lower().ljust(256).encode('utf-8', errors='ignore'),
                 prompt_lower[:len(canary)].ljust(256).encode('utf-8', errors='ignore')
-            ) or canary.lower() in prompt_lower:
+            ):
                 latency = (time.perf_counter() - start) * 1000
                 return CanaryResult(
                     triggered=True,

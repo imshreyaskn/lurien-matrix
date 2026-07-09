@@ -185,7 +185,7 @@ export default function LiveTestWidget() {
         <div className={`border p-4 space-y-4 animate-fade-in ${
           result.safe
             ? 'bg-luma-000 border-luma-500'
-            : 'bg-luma-000 border-luma-FFF animate-flicker'
+            : 'bg-status-blocked/10 border-status-blocked text-status-blocked'
         }`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-luma-300 pb-4">

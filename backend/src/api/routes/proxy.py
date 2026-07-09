@@ -204,5 +204,5 @@ async def proxy_llm_request(
         logger.error(f"Proxy forward error: {e}")
         raise HTTPException(
             status_code=502,
-            detail=f"Error forwarding to {provider}: {str(e)[:200]}",
+            detail=f"An internal error occurred while forwarding to {provider}.",
         )

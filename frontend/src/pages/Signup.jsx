@@ -42,25 +42,25 @@ export default function Signup() {
       {/* Background Decor */}
       <div className="absolute bottom-10 right-10 structural-text">02</div>
       
-      <div className="glass p-10 w-full max-w-md relative z-10 flex flex-col gap-8">
+      <div className="auth-card p-10 w-full max-w-md relative z-10 flex flex-col gap-8">
         <div className="flex flex-col items-center gap-4 mb-2">
           <img src="/logo.png" alt="Lurien Matrix Logo" className="w-24 h-24 object-contain opacity-90" />
-          <h1 className="text-2xl font-light tracking-widest text-white uppercase mt-2">Lurien Matrix</h1>
+          <h1 className="title-text font-light tracking-widest text-luma-FFF uppercase mt-2">Lurien Matrix</h1>
         </div>
 
         {error && (
-          <div className="p-3 border border-red-900 bg-red-950/20 text-red-400 text-sm font-mono animate-blocked-shake">
+          <div className="p-3 border border-firewall-red bg-firewall-red/10 text-firewall-red text-sm font-mono animate-blocked-shake">
             [ERROR] {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <label className="text-xs uppercase tracking-widest text-[#666666]">Identity (Email)</label>
+            <label className="text-xs uppercase tracking-widest text-luma-500">Identity (Email)</label>
             <input
               type="email"
               required
-              className="bg-[#0A0A0A] border border-[#333333] p-3 text-white focus:outline-none focus:border-[#AAAAAA] transition-colors rounded-none"
+              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-none"
               placeholder="operator@system.local"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -68,11 +68,11 @@ export default function Signup() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs uppercase tracking-widest text-[#666666]">Passcode</label>
+            <label className="text-xs uppercase tracking-widest text-luma-500">Passcode</label>
             <input
               type="password"
               required
-              className="bg-[#0A0A0A] border border-[#333333] p-3 text-white focus:outline-none focus:border-[#AAAAAA] transition-colors rounded-none font-mono tracking-widest"
+              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-none font-mono tracking-widest"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -80,11 +80,11 @@ export default function Signup() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs uppercase tracking-widest text-[#666666]">Confirm Passcode</label>
+            <label className="text-xs uppercase tracking-widest text-luma-500">Confirm Passcode</label>
             <input
               type="password"
               required
-              className="bg-[#0A0A0A] border border-[#333333] p-3 text-white focus:outline-none focus:border-[#AAAAAA] transition-colors rounded-none font-mono tracking-widest"
+              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-none font-mono tracking-widest"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -94,15 +94,15 @@ export default function Signup() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 inverted-chip w-full py-4 flex items-center justify-center gap-2 hover:bg-[#CCCCCC] transition-colors disabled:opacity-50"
+            className="mt-4 inverted-chip w-full py-4 flex items-center justify-center gap-2 hover:bg-luma-900 transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'GENERATE CREDENTIALS'}
           </button>
         </form>
 
         <div className="text-center mt-2">
-          <p className="text-[#666666] text-xs">
-            ALREADY CLEARED? <Link to="/login" className="text-white border-b border-[#333333] hover:border-white transition-colors pb-1 ml-2">AUTHENTICATE</Link>
+          <p className="text-luma-500 text-xs">
+            ALREADY CLEARED? <Link to="/login" className="text-luma-FFF border-b border-luma-300 hover:border-luma-FFF transition-colors pb-1 ml-2">AUTHENTICATE</Link>
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { formatMs } from '../utils/formatters';
+import { LAYER } from '../utils/theme';
 
 /**
  * Visual breakdown of all 6 classifier layers.
@@ -16,21 +17,13 @@ export default function LayerBreakdown({ layers }) {
     context_policy,
   } = layers;
 
-  const l0Color = { bg: '#3a3242', border: '#52495c', text: '#D1C4E9' };
-  const l1Color = { bg: '#3a2727', border: '#5c3e3e', text: '#FFCDD2' };
-  const l2Color = { bg: '#3a3227', border: '#5c503e', text: '#FFE0B2' };
-  const l25Color = { bg: '#25352c', border: '#324a3e', text: '#A5D6A7' };
-  const l3Color = { bg: '#3a3627', border: '#5c563e', text: '#FFF9C4' };
-  const l4Color = { bg: '#27313a', border: '#3e4d5c', text: '#B3E5FC' };
-  const l5Color = { bg: '#3a272b', border: '#5c3e45', text: '#F8BBD0' };
-
   return (
     <div className="space-y-3">
       {/* Layer 0 — Canary */}
       <LayerRow
         name="Canary Token"
         number="L0"
-        color={l0Color}
+        color={LAYER.l0}
         ran={canary?.ran !== false}
         triggered={canary?.triggered}
         score={canary?.score}
@@ -46,7 +39,7 @@ export default function LayerBreakdown({ layers }) {
       <LayerRow
         name="Rule-Based"
         number="L1"
-        color={l1Color}
+        color={LAYER.l1}
         ran={rule_based?.ran !== false}
         triggered={rule_based?.triggered}
         score={rule_based?.score}
@@ -58,7 +51,7 @@ export default function LayerBreakdown({ layers }) {
       <LayerRow
         name="Heuristic"
         number="L2"
-        color={l2Color}
+        color={LAYER.l2}
         ran={heuristic?.ran !== false}
         triggered={heuristic?.triggered}
         score={heuristic?.score}
@@ -70,7 +63,7 @@ export default function LayerBreakdown({ layers }) {
       <LayerRow
         name="Embedding Similarity"
         number="L3"
-        color={l3Color}
+        color={LAYER.l3}
         ran={embedding_similarity?.ran !== false}
         triggered={embedding_similarity?.triggered}
         score={embedding_similarity?.similarity_score}
@@ -86,7 +79,7 @@ export default function LayerBreakdown({ layers }) {
       <LayerRow
         name="ML Classifier"
         number="L4"
-        color={l4Color}
+        color={LAYER.l4}
         ran={ml_classifier?.ran !== false}
         triggered={ml_classifier?.triggered}
         score={ml_classifier?.confidence}
@@ -98,7 +91,7 @@ export default function LayerBreakdown({ layers }) {
       <LayerRow
         name="Context Policy"
         number="L5"
-        color={l5Color}
+        color={LAYER.l5}
         ran={context_policy?.ran !== false}
         triggered={context_policy?.triggered}
         score={context_policy?.score}
@@ -123,7 +116,7 @@ function LayerRow({ name, number, color, ran, triggered, score, latency, detail 
     <div className={`flex items-center gap-3 py-2 border-b border-luma-300 ${opacity}`}>
       {/* Number badge */}
       <div 
-        className={`w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0 font-mono border ${triggered ? 'animate-flicker' : ''}`}
+        className={`w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0 font-mono border`}
         style={!isSkipped ? {
           backgroundColor: color.bg,
           borderColor: color.border,
