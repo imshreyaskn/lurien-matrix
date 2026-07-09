@@ -62,7 +62,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['SF Pro', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Montserrat', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'ui-monospace', 'monospace'],
       },
       animation: {
