@@ -238,9 +238,14 @@ export default function Analytics() {
 
         {/* Layer Effectiveness */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/5 rounded-lg p-8 shadow-xl">
-          <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2">
-            Intercept Topology
-          </h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase flex items-center gap-2">
+              Intercept Topology
+            </h3>
+            <span className="text-xs text-luma-500 font-mono tracking-widest uppercase bg-black/20 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+              {Object.values(layerData).filter(v => v > 0).length}/6 ACTIVE
+            </span>
+          </div>
           <div className="space-y-6 mt-4">
             <LayerStat
               name="Canary Token (L0)"
