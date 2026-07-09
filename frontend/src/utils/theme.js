@@ -60,15 +60,16 @@ export const STATUS = {
 export const CHART_THEME = {
   tooltip: {
     contentStyle: {
-      background: INK[100],
-      border: `1px solid ${INK[300]}`,
-      borderRadius: 0,
-      color: INK[1000],
+      background: 'rgba(0, 0, 0, 0.4)',
+      backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      borderRadius: '8px',
+      color: '#FFFFFF',
       fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
       fontSize: '11px',
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
-      boxShadow: 'none',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
     },
     labelStyle: { color: INK[700] },
     cursor: { fill: 'rgba(255,255,255,0.03)' },

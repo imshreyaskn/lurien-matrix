@@ -31,7 +31,7 @@ export default function Overview() {
       })
     : [];
 
-  // Prepare layer effectiveness data
+  // Prepare layer effectiveness data (only show active layers)
   const layerData = stats?.layer_effectiveness
     ? [
         { name: 'Canary Token', value: stats.layer_effectiveness.canary_pct, color: '#9B4444' },
@@ -40,7 +40,7 @@ export default function Overview() {
         { name: 'Embedding Similarity', value: stats.layer_effectiveness.embedding_pct, color: '#456B7D' },
         { name: 'ML Classifier', value: stats.layer_effectiveness.ml_pct, color: '#6B5B95' },
         { name: 'Context Policy', value: stats.layer_effectiveness.context_pct, color: '#D4B89E' },
-      ]
+      ].filter(l => l.value > 0)
     : [];
 
   return (
@@ -135,9 +135,14 @@ export default function Overview() {
 
         {/* Layer Effectiveness */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/5 rounded-lg p-8 shadow-xl">
-          <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">
-            Matrix Interception Layers
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase">
+              Matrix Interception Layers
+            </h3>
+            <span className="text-xs text-luma-500 font-mono tracking-widest uppercase bg-black/20 px-3 py-1 rounded-full border border-white/5">
+              {layerData.length}/6 ACTIVE
+            </span>
+          </div>
           <div className="space-y-5 mt-6 font-mono">
             {layerData.map((layer) => (
               <div key={layer.name} className="space-y-1">

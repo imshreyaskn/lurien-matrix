@@ -246,9 +246,23 @@ function animateBlockedPulse(svg, nodes, event, delay) {
     labelText = 'OOS_INTENT_DETECTED';
   }
 
+  const labelWidth = labelText.length * 9;
+  
+  const bgRect = g.append('rect')
+    .attr('x', nodes[1].x - labelWidth / 2 - 10)
+    .attr('y', nodes[1].y - 85)
+    .attr('width', labelWidth + 20)
+    .attr('height', 24)
+    .attr('rx', 4)
+    .attr('ry', 4)
+    .attr('fill', 'rgba(0, 0, 0, 0.6)')
+    .attr('stroke', 'rgba(255, 255, 255, 0.1)')
+    .attr('stroke-width', 1)
+    .attr('opacity', 0);
+
   const blockedText = g.append('text')
     .attr('x', nodes[1].x)
-    .attr('y', nodes[1].y - 70)
+    .attr('y', nodes[1].y - 68)
     .attr('text-anchor', 'middle')
     .attr('fill', '#D4B89E')
     .attr('font-size', '14')
@@ -259,10 +273,17 @@ function animateBlockedPulse(svg, nodes, event, delay) {
     .attr('opacity', 0)
     .text(labelText);
 
+  bgRect
+    .transition().delay(explosionDelay).duration(100)
+    .attr('opacity', 1)
+    .attr('y', nodes[1].y - 95)
+    .transition().delay(1500).duration(300)
+    .attr('opacity', 0);
+
   blockedText
     .transition().delay(explosionDelay).duration(100)
     .attr('opacity', 1)
-    .attr('y', nodes[1].y - 80)
+    .attr('y', nodes[1].y - 78)
     .transition().delay(1500).duration(300)
     .attr('opacity', 0);
 
