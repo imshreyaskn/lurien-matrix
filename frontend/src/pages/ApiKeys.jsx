@@ -21,8 +21,7 @@ const CODE_SAMPLES = {
   node: `const { LurienMatrix } = require('lurien-matrix');
 
 const fw = new LurienMatrix({
-  apiKey: process.env.LURIEN_MATRIX_KEY,
-  baseUrl: "https://imdrizzle-lurien-matrix-firewall.hf.space"
+  apiKey: process.env.LURIEN_MATRIX_KEY
 });
 
 // Direct check
