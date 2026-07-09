@@ -77,7 +77,7 @@ export default function Analytics() {
 
       {/* Hero Telemetry Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">TOTAL THREATS</div>
           <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {formatNumber(stats?.flagged_count || 0)}
@@ -86,7 +86,7 @@ export default function Analytics() {
             {stats?.flag_rate?.toFixed(1) || 0}% THREATS
           </div>
         </div>
-        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">AVG LATENCY</div>
           <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {stats?.avg_processing_time_ms?.toFixed(1) || 0}MS
@@ -95,7 +95,7 @@ export default function Analytics() {
             FASTEST PATH &lt;5MS
           </div>
         </div>
-        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-accent-gold/50 rounded-[32px] flex flex-col justify-between min-h-[140px] shadow-[0_0_30px_rgba(212,184,158,0.15)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-accent-gold/50 rounded-xl flex flex-col justify-between min-h-[140px] shadow-[0_0_30px_rgba(212,184,158,0.15)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
           <div className="text-xs text-accent-gold uppercase font-bold tracking-widest">SYS STATUS</div>
           <div className="text-[36px] font-semibold font-mono mt-4 text-luma-FFF tabular-nums leading-none">
             {loading && !stats ? '...' : error ? 'ERR' : 'ACTIVE'}
@@ -104,7 +104,7 @@ export default function Analytics() {
             {error ? 'API LOST' : 'MATRIX PIPELINE OK'}
           </div>
         </div>
-        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+        <div className="p-6 bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
           <div className="text-xs text-luma-700 uppercase font-bold tracking-widest">ACTIVE VECTORS</div>
           <div className="text-[36px] font-semibold text-luma-FFF font-mono mt-4 tabular-nums leading-none">
             {attackData.length}
@@ -116,7 +116,7 @@ export default function Analytics() {
       </div>
 
       {/* Row 1: Attack type breakdown over time (stepped line chart) */}
-      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
         <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2">
           Vector Proliferation Tracking (30 Days)
         </h3>
@@ -145,7 +145,7 @@ export default function Analytics() {
       </div>
 
       {/* Row 2: 24-Hour Heatmap Grid */}
-      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
         <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4 flex items-center gap-2">
           Hourly Ingress Constellation
         </h3>
@@ -213,7 +213,7 @@ export default function Analytics() {
       {/* Row 3: Histogram of Risk Scores & Layer effectiveness */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Risk Score Histogram */}
-        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2">
             Risk Score Density
           </h3>
@@ -237,7 +237,7 @@ export default function Analytics() {
         </div>
 
         {/* Layer Effectiveness */}
-        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2">
             Intercept Topology
           </h3>
@@ -283,7 +283,7 @@ export default function Analytics() {
       </div>
 
       {/* Row 4: Top flagged patterns list */}
-      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
         <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">
           Identified Malicious Signatures
         </h3>
