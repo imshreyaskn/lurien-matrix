@@ -91,7 +91,7 @@ export default function Overview() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Donut Chart */}
-        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">
             Vector Distribution
           </h3>
@@ -134,7 +134,7 @@ export default function Overview() {
         </div>
 
         {/* Layer Effectiveness */}
-        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">
             Matrix Interception Layers
           </h3>
@@ -165,7 +165,7 @@ export default function Overview() {
       </div>
 
       {/* Real-time Feed */}
-      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-xl">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-xl p-8 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase">
             Ingress Terminal Feed
@@ -222,7 +222,7 @@ export default function Overview() {
 
 function MetricCard({ label, value, delta, highlight }) {
   return (
-    <div className={`p-6 bg-luma-100/40 backdrop-blur-2xl border rounded-[32px] flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${highlight ? 'border-accent-gold/50 shadow-[0_0_30px_rgba(212,184,158,0.15)]' : 'border-white/5'}`}>
+    <div className={`p-6 bg-luma-100/40 backdrop-blur-2xl border rounded-xl flex flex-col justify-between min-h-[140px] shadow-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${highlight ? 'border-accent-gold/50 shadow-[0_0_30px_rgba(212,184,158,0.15)]' : 'border-white/5'}`}>
       <span className={`text-xs font-bold uppercase tracking-widest ${highlight ? 'text-accent-gold' : 'text-luma-700'}`}>
         {label}
       </span>
