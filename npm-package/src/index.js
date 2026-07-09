@@ -22,7 +22,7 @@ class LurienMatrix {
     }
 
     this.options = {
-      baseUrl: "https://imdrizzle-lurien-matrix.hf.space",
+      baseUrl: "https://imdrizzle-lurien-matrix-firewall.hf.space",
       threshold: 0.50,
       mode: "check",
       timeout: 5000,
