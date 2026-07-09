@@ -28,7 +28,7 @@ export default function Overview() {
           value,
           color: colorObj.text,
         };
-      })
+      }).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
     : [];
 
   // Prepare layer effectiveness data (only show active layers)
