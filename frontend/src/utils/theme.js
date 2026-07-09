@@ -71,7 +71,8 @@ export const CHART_THEME = {
       letterSpacing: '0.05em',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
     },
-    labelStyle: { color: INK[700] },
+    labelStyle: { color: '#FFFFFF' },
+    itemStyle: { color: '#FFFFFF' },
     cursor: { fill: 'rgba(255,255,255,0.03)' },
   },
   grid: {
