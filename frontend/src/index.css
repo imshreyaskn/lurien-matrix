@@ -33,21 +33,13 @@ body {
 
 /* ── Scrollbar ────────────────────────────────────────── */
 
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
 ::-webkit-scrollbar {
-  width: 2px;
-  height: 2px;
-}
-
-::-webkit-scrollbar-track {
-  background: #000000;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #333333;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #AAAAAA;
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* ── Custom Utilities ─────────────────────────────────── */
