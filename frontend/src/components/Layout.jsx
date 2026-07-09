@@ -3,7 +3,7 @@ import FloatingIsland from './FloatingIsland';
 
 export default function Layout() {
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-luma-000">
+    <div className="relative h-screen w-screen overflow-hidden">
       {/* Structural Watermark */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="structural-text absolute -left-40 top-40 -rotate-90 origin-left">
