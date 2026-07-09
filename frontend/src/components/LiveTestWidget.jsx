@@ -64,7 +64,7 @@ export default function LiveTestWidget() {
   };
 
   return (
-    <div className="border border-luma-300 bg-luma-000 p-6 space-y-4">
+    <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg p-6 space-y-4 shadow-xl">
       <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase flex items-center gap-2">
         LIVE INJECTION TERMINAL
       </h3>
@@ -75,7 +75,7 @@ export default function LiveTestWidget() {
           <button
             key={ex.label}
             onClick={() => setPrompt(ex.prompt)}
-            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 border border-luma-300 bg-luma-100 text-luma-500 hover:text-luma-FFF hover:border-luma-500 transition-all"
+            className="text-xs font-mono tracking-widest uppercase px-3 py-1.5 border border-white/5 bg-black/20 rounded-md text-luma-500 hover:text-luma-FFF hover:bg-white/5 hover:border-white/10 transition-all shadow-sm"
           >
             {ex.label.replace(/🚨|🎯|✅/g, '').trim()}
           </button>
@@ -88,20 +88,19 @@ export default function LiveTestWidget() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="ENTER PAYLOAD STRING TO TEST INGRESS PIPELINE..."
-          className="w-full h-28 bg-luma-000 border border-luma-300 p-4 text-xs text-luma-FFF placeholder-luma-700 resize-none focus:outline-none focus:border-luma-700 transition-colors font-mono tracking-widest uppercase"
+          className="w-full h-28 bg-black/20 border border-white/5 rounded-md p-4 text-xs text-luma-FFF placeholder-luma-700 resize-none focus:outline-none focus:border-luma-500 transition-colors font-mono tracking-widest uppercase shadow-inner"
         />
       </div>
-            {/* API Key selector — dashboard flow, no raw key needed */}
-        <div className="p-3 border-b border-luma-300 bg-luma-000 flex items-center justify-between">
+        <div className="p-4 border border-white/5 bg-black/20 rounded-md flex items-center justify-between mb-4 shadow-inner">
           <div className="flex items-center gap-2 group relative">
             <span className="text-xs font-bold text-luma-500 tracking-widest uppercase">TEST AS KEY</span>
-            <Info className="w-3.5 h-3.5 text-luma-300 cursor-help" />
-            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 bg-luma-000 border border-luma-300 p-2 text-[10px] text-luma-500 z-10 shadow-lg">
+            <Info className="w-3.5 h-3.5 text-luma-500 cursor-help hover:text-luma-FFF transition-colors" />
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-md p-3 text-[10px] text-luma-500 z-10 shadow-2xl">
               Run the test payload using a specific key's intent profile and canary token settings.
             </div>
           </div>
           <select
-            className="bg-luma-100 border border-luma-300 text-luma-FFF text-xs font-mono px-2 py-1 outline-none focus:border-accent-gold"
+            className="bg-white/5 border border-white/10 rounded-md text-luma-FFF text-xs font-mono px-3 py-1.5 outline-none focus:border-accent-gold transition-colors"
             value={selectedKey}
             onChange={(e) => setSelectedKey(e.target.value)}
           >
@@ -126,7 +125,7 @@ export default function LiveTestWidget() {
             value={appContext}
             onChange={(e) => setAppContext(e.target.value)}
             placeholder="GENERAL (UNRESTRICTED)"
-            className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-xs font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase"
+            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs font-mono text-luma-FFF focus:outline-none focus:border-luma-500 uppercase transition-colors"
           />
           <datalist id="live-app-contexts">
             <option value="general">GENERAL (UNRESTRICTED)</option>
@@ -146,7 +145,7 @@ export default function LiveTestWidget() {
             value={customCanary}
             onChange={(e) => setCustomCanary(e.target.value)}
             placeholder="FW_SYS_8F3A2B91"
-            className="w-full bg-luma-000 border border-luma-300 px-3 py-2 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-700 uppercase"
+            className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-500 uppercase transition-colors"
           />
         </div>
       </div>
@@ -155,8 +154,8 @@ export default function LiveTestWidget() {
       <button
         onClick={handleTest}
         disabled={loading || !prompt.trim()}
-        className={`w-full py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-          loading ? 'bg-luma-100 text-luma-500 border border-luma-300' : 'bg-accent-gold text-luma-000 border border-accent-gold hover:bg-accent-gold/80 hover:text-luma-000'
+        className={`w-full py-3 rounded-md shadow-lg text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+          loading ? 'bg-white/5 text-luma-500 border border-white/10' : 'bg-accent-gold text-luma-000 border border-accent-gold hover:bg-accent-gold/90 shadow-[0_0_20px_rgba(212,184,158,0.2)]'
         }`}
       >
         {loading ? (
@@ -174,7 +173,7 @@ export default function LiveTestWidget() {
 
       {/* Error */}
       {error && (
-        <div className="bg-luma-100 border border-luma-500 p-4 flex items-center gap-3">
+        <div className="bg-status-blocked/10 border border-status-blocked/30 rounded-md p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-luma-FFF shrink-0" />
           <span className="text-xs font-mono tracking-widest text-luma-FFF uppercase">{error}</span>
         </div>
@@ -182,13 +181,13 @@ export default function LiveTestWidget() {
 
       {/* Result */}
       {result && (
-        <div className={`border p-4 space-y-4 animate-fade-in ${
+        <div className={`border p-5 rounded-lg shadow-inner space-y-4 animate-fade-in ${
           result.safe
-            ? 'bg-luma-000 border-luma-500'
-            : 'bg-status-blocked/10 border-status-blocked text-status-blocked'
+            ? 'bg-black/40 border-white/10'
+            : 'bg-status-blocked/10 border-status-blocked/30 text-status-blocked'
         }`}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-luma-300 pb-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
               <span className={`text-xl font-bold tracking-widest uppercase ${result.safe ? 'text-luma-500' : 'text-luma-FFF'}`}>
                 {result.safe ? 'STATUS: SAFE' : 'STATUS: BLOCKED'}
@@ -198,20 +197,20 @@ export default function LiveTestWidget() {
 
           {/* Quick stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-luma-100 p-2 text-center border border-luma-300">
-              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase">RISK SCORE</div>
+            <div className="bg-white/5 rounded-md p-3 text-center border border-white/5 shadow-inner">
+              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1">RISK SCORE</div>
               <div className="text-lg font-bold font-mono text-luma-FFF">
                 {(result.risk_score * 100).toFixed(1)}%
               </div>
             </div>
-            <div className="bg-luma-100 p-2 text-center border border-luma-300">
-              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase">LATENCY</div>
+            <div className="bg-white/5 rounded-md p-3 text-center border border-white/5 shadow-inner">
+              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1">LATENCY</div>
               <div className="text-lg font-bold font-mono text-luma-FFF">
                 {Math.round(result.processing_time_ms)}MS
               </div>
             </div>
-            <div className="bg-luma-100 p-2 text-center border border-luma-300">
-              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase">TRIPPED NODE</div>
+            <div className="bg-white/5 rounded-md p-3 text-center border border-white/5 shadow-inner">
+              <div className="text-xs text-luma-500 font-mono tracking-widest uppercase mb-1">TRIPPED NODE</div>
               <div className="text-lg font-bold font-mono text-luma-FFF uppercase truncate px-2">
                 {result.flagged_layer || 'NONE'}
               </div>
@@ -223,10 +222,10 @@ export default function LiveTestWidget() {
 
           {/* Raw JSON */}
           <details className="group">
-            <summary className="text-xs text-luma-500 font-mono tracking-widest uppercase cursor-pointer hover:text-luma-FFF">
+            <summary className="text-xs text-luma-500 font-mono tracking-widest uppercase cursor-pointer hover:text-luma-FFF transition-colors">
               VIEW RAW TELEMETRY DATA
             </summary>
-            <pre className="mt-2 bg-luma-000 border border-luma-300 p-3 text-xs font-mono text-luma-500 overflow-auto max-h-60 uppercase">
+            <pre className="mt-3 bg-black/30 border border-white/5 rounded-md p-4 text-xs font-mono text-luma-500 overflow-auto max-h-60 uppercase shadow-inner">
               {JSON.stringify(result, null, 2)}
             </pre>
           </details>

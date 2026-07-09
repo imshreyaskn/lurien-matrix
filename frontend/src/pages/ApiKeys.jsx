@@ -140,7 +140,7 @@ export default function ApiKeys() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-accent-gold/80 transition-colors"
+          className="px-4 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold rounded-md shadow-[0_0_20px_rgba(212,184,158,0.2)] text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-accent-gold/90 transition-all"
         >
           <Plus className="w-4 h-4" />
           GENERATE TOKEN
@@ -149,7 +149,7 @@ export default function ApiKeys() {
 
       {/* Created Key Alert */}
       {createdKey && (
-        <div className="bg-accent-gold/10 text-accent-gold p-5 animate-fade-in border border-accent-gold/30 backdrop-blur-sm">
+        <div className="bg-accent-gold/10 text-accent-gold p-5 rounded-lg shadow-xl animate-fade-in border border-accent-gold/30 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-3">
             <Check className="w-5 h-5 text-accent-gold" />
             <span className="text-sm font-bold uppercase tracking-widest">TOKEN GENERATED</span>
@@ -157,7 +157,7 @@ export default function ApiKeys() {
           <p className="text-xs text-accent-gold/70 font-mono tracking-widest uppercase mb-3">
             Copy this key now. It will not be shown again.
           </p>
-          <div className="flex items-center gap-2 bg-black/40 p-3 border border-accent-gold/20 shadow-inner">
+          <div className="flex items-center gap-2 bg-black/40 p-3 border border-accent-gold/20 shadow-inner rounded-md">
             <code className="flex-1 text-sm font-mono text-accent-gold break-all">
               {createdKey.api_key}
             </code>
@@ -183,7 +183,7 @@ export default function ApiKeys() {
 
       {/* Create Key Modal */}
       {showCreate && (
-        <div className="bg-luma-000 p-6 border border-luma-300 animate-fade-in space-y-4">
+        <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg p-6 shadow-xl animate-fade-in space-y-4">
           <h3 className="text-sm font-bold text-luma-FFF tracking-widest uppercase">Generate Access Token</h3>
           <div className="space-y-4">
             <div>
@@ -192,12 +192,12 @@ export default function ApiKeys() {
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
                 placeholder="PROD-NODE-01"
-                className="w-full bg-luma-000 border border-luma-300 px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-700 uppercase"
+                className="w-full bg-black/20 border border-white/10 rounded-md px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-500 uppercase transition-colors"
               />
             </div>
             
             {/* Advanced configurations */}
-            <div className="border-t border-luma-300 pt-4 space-y-4">
+            <div className="border-t border-white/5 pt-4 space-y-4">
               <h4 className="text-xs font-bold text-luma-700 uppercase tracking-widest flex items-center gap-2">
                 ADVANCED TOPOLOGY
               </h4>
@@ -211,7 +211,7 @@ export default function ApiKeys() {
                   value={appContext}
                   onChange={(e) => setAppContext(e.target.value)}
                   placeholder="GENERAL_ACCESS"
-                  className="w-full bg-luma-000 border border-luma-300 px-4 py-2.5 text-xs font-mono text-luma-FFF focus:outline-none focus:border-luma-700 uppercase"
+                  className="w-full bg-black/20 border border-white/10 rounded-md px-4 py-2.5 text-xs font-mono text-luma-FFF focus:outline-none focus:border-luma-500 uppercase transition-colors"
                 />
                 <datalist id="api-key-contexts">
                   <option value="GENERAL_ACCESS" />
@@ -232,7 +232,7 @@ export default function ApiKeys() {
                   value={customCanary}
                   onChange={(e) => setCustomCanary(e.target.value)}
                   placeholder="SYS_LEAK_TOKEN_0X9"
-                  className="w-full bg-luma-000 border border-luma-300 px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-700 uppercase"
+                  className="w-full bg-black/20 border border-white/10 rounded-md px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-500 uppercase transition-colors"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export default function ApiKeys() {
                   onChange={(e) => setCustomIntentExamples(e.target.value)}
                   placeholder="ANALYZE_LOGS&#10;PROCESS_PAYLOAD"
                   rows={3}
-                  className="w-full bg-luma-000 border border-luma-300 px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-700 uppercase tracking-widest"
+                  className="w-full bg-black/20 border border-white/10 rounded-md px-4 py-2.5 text-xs font-mono text-luma-FFF placeholder-luma-700 focus:outline-none focus:border-luma-500 uppercase tracking-widest transition-colors"
                 />
               </div>
 
@@ -257,13 +257,13 @@ export default function ApiKeys() {
               <button
                 onClick={handleCreate}
                 disabled={!newKeyName.trim()}
-                className="flex-1 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold text-xs font-bold uppercase tracking-widest hover:bg-accent-gold/80 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 bg-accent-gold text-luma-000 border border-accent-gold rounded-md shadow-lg text-xs font-bold uppercase tracking-widest hover:bg-accent-gold/90 transition-all disabled:opacity-50"
               >
                 DEPLOY TOKEN
               </button>
               <button
                 onClick={() => setShowCreate(false)}
-                className="px-6 py-2.5 border border-luma-300 bg-luma-000 text-xs font-bold text-luma-500 uppercase tracking-widest hover:text-luma-FFF transition-colors"
+                className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-md text-xs font-bold text-luma-500 uppercase tracking-widest hover:text-luma-FFF hover:bg-white/10 transition-all"
               >
                 ABORT
               </button>
@@ -273,14 +273,14 @@ export default function ApiKeys() {
       )}
 
       {/* Keys List */}
-      <div className="border border-luma-300 bg-luma-000 overflow-hidden">
-        <div className="p-4 border-b border-luma-300 bg-luma-100">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg overflow-hidden shadow-xl">
+        <div className="p-4 border-b border-white/5 bg-black/20">
           <h3 className="text-xs font-bold text-luma-700 uppercase tracking-widest">ACTIVE TOKENS</h3>
         </div>
         {keys.length > 0 ? (
-          <div className="divide-y divide-luma-300">
+          <div className="divide-y divide-white/5">
             {keys.map((key) => (
-              <div key={key.key_id} className="p-4 flex items-center gap-4 hover:bg-luma-100 transition-colors">
+              <div key={key.key_id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
                 <Key className="w-5 h-5 text-luma-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-luma-FFF tracking-widest uppercase flex items-center gap-2">
@@ -323,19 +323,19 @@ export default function ApiKeys() {
       </div>
 
       {/* Integration Guide */}
-      <div className="border border-luma-300 bg-luma-000 p-6">
+      <div className="bg-luma-100/40 backdrop-blur-2xl border border-white/5 rounded-lg p-6 shadow-xl">
         <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4">INTEGRATION TOPOLOGY</h3>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-luma-100 p-1 mb-4 border border-luma-300">
+        <div className="flex gap-1 bg-black/20 p-1 mb-4 border border-white/5 rounded-md">
           {INTEGRATION_TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold tracking-widest uppercase transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-xs font-bold tracking-widest uppercase transition-all ${
                 activeTab === id
-                  ? 'bg-accent-gold text-luma-000 border border-accent-gold'
-                  : 'bg-transparent text-luma-500 hover:text-luma-FFF'
+                  ? 'bg-accent-gold text-luma-000 shadow-md'
+                  : 'bg-transparent text-luma-500 hover:text-luma-FFF hover:bg-white/5'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -346,12 +346,12 @@ export default function ApiKeys() {
 
         {/* Code */}
         <div className="relative">
-          <pre className="bg-luma-000 p-4 text-xs font-mono text-luma-FFF overflow-auto max-h-80 border border-luma-300">
+          <pre className="bg-black/30 p-4 rounded-md text-xs font-mono text-luma-FFF overflow-auto max-h-80 border border-white/5 shadow-inner">
             <code>{CODE_SAMPLES[activeTab]}</code>
           </pre>
           <button
             onClick={() => handleCopy(CODE_SAMPLES[activeTab], activeTab)}
-            className="absolute top-3 right-3 p-2 bg-luma-100 hover:bg-luma-300 text-luma-500 hover:text-luma-FFF transition-all border border-luma-300 hover:border-luma-500"
+            className="absolute top-3 right-3 p-2 bg-white/5 rounded-md hover:bg-white/20 text-luma-500 hover:text-luma-FFF transition-all border border-white/10 shadow-md"
           >
             {copiedId === activeTab ? (
               <Check className="w-4 h-4 text-luma-FFF" />
