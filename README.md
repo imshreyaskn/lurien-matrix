@@ -1,5 +1,8 @@
-
-# Lurien Matrix
+<div align="center">
+  <img src="frontend/public/logo.png" alt="Lurien Matrix Logo" width="120" />
+  <h1>Lurien Matrix</h1>
+</div>
+<br />
 
 Lurien Matrix is a production-grade, true proxy-based firewall engineered to secure applications against malicious interactions with Large Language Models. It operates as an intermediary proxy between your application and APIs such as OpenAI, Gemini, Claude, and Groq, intercepting and neutralizing prompt injections, data exfiltration attempts, and systemic overrides before they reach the model.
 
