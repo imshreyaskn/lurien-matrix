@@ -214,6 +214,7 @@ class HealthResponse(BaseModel):
     classifier_latency_ms: Optional[float] = None
     db_connected: bool
     redis_connected: bool
+    neo4j_connected: bool
     uptime_seconds: int
     model_version: str
 

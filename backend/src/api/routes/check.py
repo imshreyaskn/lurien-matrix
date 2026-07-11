@@ -18,8 +18,10 @@ from src.api.schemas import (
     BatchCheckResponse,
 )
 from src.api.middleware import resolve_check_auth
-from src.utils.hashing import hash_prompt
+from src.utils.hashing import hash_prompt, hash_normalized_prompt
 from src.db import mongo
+from src.db.neo4j_client import enqueue_write, get_driver
+from src.db.graph_writer import write_threat_event
 
 logger = logging.getLogger("llm_firewall.routes.check")
 
@@ -43,15 +45,67 @@ async def check_prompt(
     app_ctx = body.app_context if body.app_context != "general" else key_doc.get("app_context", "general")
     canary_token = body.custom_canary or key_doc.get("custom_canary", None)
 
-    result = await run_in_threadpool(
-        pipeline.classify,
-        text=body.prompt,
-        threshold=body.threshold,
-        metadata=body.metadata,
-        app_context=app_ctx,
-        custom_canary=canary_token,
-        use_openai_moderation=key_doc.get("use_openai_moderation", False)
-    )
+    # Pre-pipeline check: Graph Replay Cache
+    normalized_hash = hash_normalized_prompt(body.prompt)
+    raw_hash = hash_prompt(body.prompt)
+    graph_replay_hit = False
+    
+    try:
+        from src.db.neo4j_client import is_connected
+        if await is_connected():
+            driver = get_driver()
+            # Check if this normalized hash has been seen as an attack >= 3 times
+            async with driver.session() as session:
+                query = """
+                MATCH (h:PromptHash {hash: $hash})-[r:IS_ATTACK]->(a:AttackType)
+                WHERE r.times_seen >= 3
+                RETURN a.name AS attack_type
+                ORDER BY r.times_seen DESC LIMIT 1
+                """
+                record = await session.run(query, hash=normalized_hash)
+                record = await record.single()
+                
+                if record:
+                    graph_replay_hit = True
+                    attack_type = record["attack_type"]
+                    
+                    from src.layers.pipeline import PipelineResult
+                    result = PipelineResult(
+                        request_id=str(uuid.uuid4()),
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                        safe=False,
+                        risk_score=1.0,
+                        attack_type=attack_type,
+                        confidence=1.0,
+                        flagged_layer="graph_replay_cache",
+                        flagged_pattern="known_attacker_payload_hash",
+                        threshold_used=body.threshold or 0.50,
+                        layers={
+                            "canary": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "rule_based": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "heuristic": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "embedding_similarity": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "ml_classifier": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "context_policy": {"ran": False, "reason": "graph_replay_cache_hit"},
+                        },
+                        processing_time_ms=0.0,
+                        model_version=pipeline.model_version,
+                        metadata=body.metadata or {},
+                        warnings=[]
+                    )
+    except Exception as e:
+        logger.error(f"Graph replay check failed: {e}")
+
+    if not graph_replay_hit:
+        result = await run_in_threadpool(
+            pipeline.classify,
+            text=body.prompt,
+            threshold=body.threshold,
+            metadata=body.metadata,
+            app_context=app_ctx,
+            custom_canary=canary_token,
+            use_openai_moderation=key_doc.get("use_openai_moderation", False)
+        )
 
     # Set response headers
     response.headers["X-Firewall-Safe"] = str(result.safe).lower()
@@ -64,7 +118,7 @@ async def check_prompt(
         "api_key_id": str(key_doc["_id"]),
         "user_id": key_doc.get("user_id"),
         "timestamp": datetime.now(timezone.utc),
-        "prompt_hash": hash_prompt(body.prompt),
+        "prompt_hash": raw_hash,
         "prompt_length": len(body.prompt),
         "safe": result.safe,
         "risk_score": result.risk_score,
@@ -83,6 +137,8 @@ async def check_prompt(
 
     try:
         await mongo.get_logs_collection().insert_one(log_entry)
+        if not result.safe:
+            await enqueue_write(write_threat_event, log_entry, normalized_hash)
     except Exception as e:
         logger.error(f"Failed to log check result: {e}")
 
@@ -180,6 +236,8 @@ async def check_batch(
                 "metadata": {},
             }
             await mongo.get_logs_collection().insert_one(log_entry)
+            if not result.safe:
+                await enqueue_write(write_threat_event, log_entry, hash_normalized_prompt(prompt))
         except Exception as e:
             logger.error(f"Failed to log batch result: {e}")
 

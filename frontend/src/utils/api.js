@@ -62,6 +62,7 @@ export const api = {
 
   // Dashboard
   getStats: () => apiFetch('/v1/stats'),
+  getGraphStats: () => apiFetch('/v1/graph/stats'),
 
   getLogs: (params = {}) => {
     const query = new URLSearchParams();

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Shield, Activity, BarChart3, Key, FileText, Power } from 'lucide-react';
+import { Shield, Activity, BarChart3, Key, FileText, Power, Network } from 'lucide-react';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/', icon: Shield, label: 'Overview' },
   { to: '/monitor', icon: Activity, label: 'Live' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/graph', icon: Network, label: 'Threat Graph' },
   { to: '/keys', icon: Key, label: 'Keys' },
   { to: '/logs', icon: FileText, label: 'Logs' },
 ];
