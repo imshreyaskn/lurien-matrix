@@ -5,7 +5,7 @@ Utility: Hashing and security functions.
 import hashlib
 import hmac
 import secrets
-
+import string
 import os
 
 def generate_api_key() -> str:
@@ -32,3 +32,12 @@ def hash_prompt(prompt: str) -> str:
     Uses SHA-256 for deterministic, irreversible hashing.
     """
     return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
+def hash_normalized_prompt(prompt: str) -> str:
+    """
+    Hash a normalized version of the prompt (lowercase, no punctuation, single spaces)
+    Used for graph replay cache deduplication.
+    """
+    normalized = prompt.lower().translate(str.maketrans('', '', string.punctuation))
+    normalized = " ".join(normalized.split())
+    return hash_prompt(normalized)

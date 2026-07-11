@@ -10,6 +10,7 @@ import logging
 from fastapi import APIRouter, Request
 
 from src.db import mongo, redis as redis_db
+from src.db.neo4j_client import is_connected as neo4j_is_connected
 
 logger = logging.getLogger("llm_firewall.routes.health")
 
@@ -36,6 +37,9 @@ async def health_check(request: Request):
     # Check Redis
     redis_connected = await redis_db.is_connected()
 
+    # Check Neo4j
+    neo4j_connected = await neo4j_is_connected()
+
     # Check classifier
     classifier_loaded = pipeline.ml_loaded
 
@@ -54,5 +58,10 @@ async def health_check(request: Request):
 
     return {
         "status": status,
+        "classifier_loaded": classifier_loaded,
+        "db_connected": db_connected,
+        "redis_connected": redis_connected,
+        "neo4j_connected": neo4j_connected,
         "uptime_seconds": uptime,
+        "model_version": pipeline.model_version if classifier_loaded else "unknown",
     }

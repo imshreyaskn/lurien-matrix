@@ -13,8 +13,10 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from src.api.middleware import validate_api_key
-from src.utils.hashing import hash_prompt
+from src.utils.hashing import hash_prompt, hash_normalized_prompt
 from src.db import mongo
+from src.db.neo4j_client import enqueue_write, get_driver
+from src.db.graph_writer import write_threat_event
 
 logger = logging.getLogger("llm_firewall.routes.proxy")
 
@@ -76,12 +78,63 @@ async def proxy_llm_request(
     app_ctx = key_doc.get("app_context", "general")
     canary_token = key_doc.get("custom_canary", None)
     
-    result = pipeline.classify(
-        text=prompt,
-        app_context=app_ctx,
-        custom_canary=canary_token,
-        use_openai_moderation=key_doc.get("use_openai_moderation", False)
-    )
+    normalized_hash = hash_normalized_prompt(prompt)
+    raw_hash = hash_prompt(prompt)
+    graph_replay_hit = False
+    
+    try:
+        from src.db.neo4j_client import is_connected
+        if await is_connected():
+            driver = get_driver()
+            async with driver.session() as session:
+                query = """
+                MATCH (h:PromptHash {hash: $hash})-[r:IS_ATTACK]->(a:AttackType)
+                WHERE r.times_seen >= 3
+                RETURN a.name AS attack_type
+                ORDER BY r.times_seen DESC LIMIT 1
+                """
+                record = await session.run(query, hash=normalized_hash)
+                record = await record.single()
+                
+                if record:
+                    graph_replay_hit = True
+                    attack_type = record["attack_type"]
+                    
+                    from src.layers.pipeline import PipelineResult
+                    import uuid
+                    result = PipelineResult(
+                        request_id=str(uuid.uuid4()),
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                        safe=False,
+                        risk_score=1.0,
+                        attack_type=attack_type,
+                        confidence=1.0,
+                        flagged_layer="graph_replay_cache",
+                        flagged_pattern="known_attacker_payload_hash",
+                        threshold_used=0.50,
+                        layers={
+                            "canary": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "rule_based": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "heuristic": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "embedding_similarity": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "ml_classifier": {"ran": False, "reason": "graph_replay_cache_hit"},
+                            "context_policy": {"ran": False, "reason": "graph_replay_cache_hit"},
+                        },
+                        processing_time_ms=0.0,
+                        model_version=pipeline.model_version,
+                        metadata={},
+                        warnings=[]
+                    )
+    except Exception as e:
+        logger.error(f"Graph replay proxy check failed: {e}")
+
+    if not graph_replay_hit:
+        result = pipeline.classify(
+            text=prompt,
+            app_context=app_ctx,
+            custom_canary=canary_token,
+            use_openai_moderation=key_doc.get("use_openai_moderation", False)
+        )
 
     # Extract model name from body
     model_name = body.get("model", None)
@@ -98,7 +151,7 @@ async def proxy_llm_request(
         "request_id": result.request_id,
         "api_key_id": str(key_doc["_id"]),
         "timestamp": datetime.now(timezone.utc),
-        "prompt_hash": hash_prompt(prompt),
+        "prompt_hash": raw_hash,
         "prompt_length": len(prompt),
         "safe": result.safe,
         "risk_score": result.risk_score,
@@ -117,6 +170,8 @@ async def proxy_llm_request(
 
     try:
         await mongo.get_logs_collection().insert_one(log_entry)
+        if not result.safe:
+            await enqueue_write(write_threat_event, log_entry, normalized_hash)
     except Exception as e:
         logger.error(f"Failed to log proxy result: {e}")
 

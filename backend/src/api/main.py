@@ -28,7 +28,7 @@ from src.layers.openai_moderation import OpenAIModerationLayer
 
 from src.classifier.inference import InjectionClassifier
 from src.proxy.engine import ProxyEngine
-from src.db import mongo, redis as redis_db
+from src.db import mongo, redis as redis_db, neo4j_client
 from src.api.errors import (
     http_exception_handler,
     validation_exception_handler,
@@ -76,6 +76,18 @@ async def lifespan(app: FastAPI):
         logger.info("✓ Redis connected")
     except Exception as e:
         logger.warning(f"⚠ Redis unavailable: {e} — rate limiting disabled")
+
+    # Connect to Neo4j
+    neo4j_uri = os.getenv("NEO4J_URI")
+    neo4j_user = os.getenv("NEO4J_USER")
+    neo4j_pass = os.getenv("NEO4J_PASSWORD")
+    if neo4j_uri and neo4j_user and neo4j_pass:
+        try:
+            await neo4j_client.connect(neo4j_uri, neo4j_user, neo4j_pass)
+        except Exception as e:
+            logger.warning(f"⚠ Neo4j connection failed: {e}")
+    else:
+        logger.warning("⚠ Neo4j credentials missing — threat graph disabled")
 
     # Initialize classifier pipeline & components
     model_path = os.getenv("MODEL_PATH", "models/")
@@ -164,6 +176,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down LLM Firewall...")
     await proxy_engine.close()
+    await neo4j_client.disconnect()
     await redis_db.disconnect()
     await mongo.disconnect()
 
@@ -212,7 +225,7 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
-from src.api.routes import check, proxy, keys, dashboard, health, auth
+from src.api.routes import check, proxy, keys, dashboard, health, auth, graph
 
 # ── Routes ────────────────────────────────────────────────────
 
@@ -222,6 +235,7 @@ app.include_router(proxy.router)
 app.include_router(keys.router)
 app.include_router(dashboard.router)
 app.include_router(health.router)
+app.include_router(graph.router)
 
 
 @app.get("/")
