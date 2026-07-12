@@ -12,15 +12,16 @@ Lurien Matrix utilizes a six-layer defense pipeline, engineered to provide compr
 
 ```mermaid
 flowchart LR
-    subgraph Clients["Client Layer"]
+    User(["End User"])
+    
+    subgraph ClientApps["Client Applications"]
         direction TB
-        User(["End User"])
         App1["HR Bot (API Key A)"]
         App2["Coding Assistant (API Key B)"]
-        
-        User -->|"Sends Prompt"| App1
-        User -->|"Sends Prompt"| App2
     end
+    
+    User -- "Sends Prompt" --> App1
+    User -- "Sends Prompt" --> App2
     
     subgraph Firewall["Lurien Matrix Firewall"]
         direction TB
@@ -38,25 +39,25 @@ flowchart LR
         L5 -->|Pass| L6
     end
     
-    subgraph Outputs["Output Layer"]
-        direction TB
-        LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
-        Block(["403 Blocked\n(Threat Report)"])
-    end
+    Block(["403 Blocked\n(Threat Report)"])
+    LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
 
-    App1 -->|"API Request"| L1
-    App2 -->|"API Request"| L1
+    App1 -- "API Request" --> L1
+    App2 -- "API Request" --> L1
     
-    L1 -.->|"Data Exfiltration"| Block
-    L2 -.->|"Direct Injection"| Block
-    L3 -.->|"Obfuscation / Anomalies"| Block
-    L4 -.->|"Known Attack Vectors"| Block
-    L5 -.->|"Complex Injections"| Block
-    L6 -.->|"Persona Hijacking"| Block
+    L1 -. "Data Exfiltration" .-> Block
+    L2 -. "Direct Injection" .-> Block
+    L3 -. "Obfuscation / Anomalies" .-> Block
+    L4 -. "Known Attack Vectors" .-> Block
+    L5 -. "Complex Injections" .-> Block
+    L6 -. "Persona Hijacking" .-> Block
     
-    L6 -->|"SAFE (Forwarded)"| LLM
-    LLM -.->|"Response"| App1
-    LLM -.->|"Response"| App2
+    L6 -- "SAFE (Forwarded)" --> LLM
+    
+    App1 <-. "Response" .- LLM
+    App2 <-. "Response" .- LLM
+    User <-. "Response" .- App1
+    User <-. "Response" .- App2
 ```
 
 1. **Canary Token Detector**
