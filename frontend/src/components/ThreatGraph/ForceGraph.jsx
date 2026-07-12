@@ -13,16 +13,26 @@ export default function ThreatForceGraph({ data }) {
   // Handle Resize
   useEffect(() => {
     if (!containerRef.current) return;
-    const observer = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height
-        });
-      }
-    });
+    const updateDimensions = () => {
+      setDimensions({
+        width: containerRef.current.clientWidth,
+        height: containerRef.current.clientHeight
+      });
+    };
+    
+    const observer = new ResizeObserver(updateDimensions);
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    
+    // Initial read
+    updateDimensions();
+    
+    // Fallback for delayed layouts
+    const timeoutId = setTimeout(updateDimensions, 100);
+    
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const { nodes, links } = useMemo(() => {
