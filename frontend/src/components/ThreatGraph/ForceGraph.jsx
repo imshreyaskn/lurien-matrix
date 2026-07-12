@@ -4,6 +4,15 @@ import { formatAttackType, getAttackColor } from '../../utils/formatters';
 
 export default function ThreatForceGraph({ data }) {
   const containerRef = useRef(null);
+  const fgRef = useRef(null);
+
+  useEffect(() => {
+    if (fgRef.current) {
+      // Increase repulsion to spread nodes out
+      fgRef.current.d3Force('charge').strength(-300);
+      fgRef.current.d3Force('link').distance(70);
+    }
+  }, [data]);
 
   if (!data || data.length === 0) {
     return (
@@ -45,6 +54,7 @@ export default function ThreatForceGraph({ data }) {
   return (
     <div ref={containerRef} className="h-[400px] w-full bg-luma-100 border border-white/5 rounded-xl overflow-hidden cursor-crosshair">
       <ForceGraph2D
+        ref={fgRef}
         width={containerRef.current?.clientWidth || 600}
         height={400}
         graphData={{ nodes, links }}
@@ -62,15 +72,30 @@ export default function ThreatForceGraph({ data }) {
             ctx.fillStyle = '#6B7280'; // API keys are gray
           }
           
+          const radius = Math.sqrt(node.val) * 2 + 6;
           ctx.beginPath();
-          ctx.arc(node.x, node.y, Math.sqrt(node.val) * 2 + 4, 0, 2 * Math.PI, false);
+          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
           ctx.fill();
+          
+          // Draw a subtle border around nodes
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
+          // Text pill background
+          ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+          const textWidth = ctx.measureText(label).width;
+          const bgWidth = textWidth + 8;
+          const bgHeight = fontSize + 4;
+          
+          ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+          ctx.fillRect(node.x - bgWidth/2, node.y + radius + 4, bgWidth, bgHeight);
+
+          // Text label
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'rgba(255,255,255,0.8)';
-          ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
-          ctx.fillText(label, node.x, node.y + Math.sqrt(node.val) * 2 + 10);
+          ctx.fillStyle = node.group === 'api_key' ? '#9CA3AF' : '#E5E7EB';
+          ctx.fillText(label, node.x, node.y + radius + 4 + (bgHeight/2));
         }}
       />
     </div>

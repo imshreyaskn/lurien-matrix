@@ -116,19 +116,18 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
 @router.get("/velocity")
 async def get_threat_velocity(current_user: dict = Depends(validate_user_token)):
     """
-    Get attacks per minute for the last 60 minutes, split by API Key.
+    Get attacks per hour for the last 24 hours, split by API Key.
     Queries MongoDB logs.
     """
     logs = mongo.get_logs_collection()
     now = datetime.now(timezone.utc)
-    sixty_mins_ago = now - timedelta(minutes=60)
+    time_window = now - timedelta(hours=24)
     
     pipeline = [
-        {"$match": {"user_id": current_user["_id"], "timestamp": {"$gte": sixty_mins_ago}, "safe": False}},
+        {"$match": {"user_id": current_user["_id"], "timestamp": {"$gte": time_window}, "safe": False}},
         {
             "$group": {
                 "_id": {
-                    "minute": {"$minute": "$timestamp"},
                     "hour": {"$hour": "$timestamp"},
                     "day": {"$dayOfMonth": "$timestamp"},
                     "api_key": "$api_key_id"
@@ -136,13 +135,12 @@ async def get_threat_velocity(current_user: dict = Depends(validate_user_token))
                 "count": {"$sum": 1}
             }
         },
-        {"$sort": {"_id.day": 1, "_id.hour": 1, "_id.minute": 1}}
+        {"$sort": {"_id.day": 1, "_id.hour": 1}}
     ]
     
     velocity_data = []
     async for doc in logs.aggregate(pipeline):
-        # Format a simple HH:MM string for the frontend
-        time_str = f"{doc['_id']['hour']:02d}:{doc['_id']['minute']:02d}"
+        time_str = f"{doc['_id']['hour']:02d}:00"
         velocity_data.append({
             "time": time_str,
             "api_key": doc["_id"]["api_key"],
