@@ -190,19 +190,27 @@ async def get_threat_velocity(current_user: dict = Depends(validate_user_token))
         {
             "$group": {
                 "_id": {
-                    "hour": {"$hour": "$timestamp"},
+                    "year": {"$year": "$timestamp"},
+                    "month": {"$month": "$timestamp"},
                     "day": {"$dayOfMonth": "$timestamp"},
+                    "hour": {"$hour": "$timestamp"},
                     "api_key": "$api_key_id"
                 },
                 "count": {"$sum": 1}
             }
         },
-        {"$sort": {"_id.day": 1, "_id.hour": 1}}
+        {"$sort": {"_id.year": 1, "_id.month": 1, "_id.day": 1, "_id.hour": 1}}
     ]
     
     velocity_data = []
     async for doc in logs.aggregate(pipeline):
-        time_str = f"{doc['_id']['hour']:02d}:00"
+        # Format as YYYY-MM-DD HH:00 so frontend string sort is strictly chronological
+        y = doc["_id"]["year"]
+        m = doc["_id"]["month"]
+        d = doc["_id"]["day"]
+        h = doc["_id"]["hour"]
+        time_str = f"{y}-{m:02d}-{d:02d} {h:02d}:00"
+        
         key_id = str(doc["_id"]["api_key"])
         velocity_data.append({
             "time": time_str,
