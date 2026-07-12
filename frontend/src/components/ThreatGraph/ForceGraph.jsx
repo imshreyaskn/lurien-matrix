@@ -5,10 +5,11 @@ import { formatAttackType, getAttackColor } from '../../utils/formatters';
 export default function ThreatForceGraph({ data }) {
   const containerRef = useRef(null);
   const fgRef = useRef(null);
-  
+
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
   const [highlightNodes, setHighlightNodes] = useState(new Set());
   const [highlightLinks, setHighlightLinks] = useState(new Set());
+  const [selectedHub, setSelectedHub] = useState(null);
 
   // Handle Resize
   useEffect(() => {
@@ -22,11 +23,7 @@ export default function ThreatForceGraph({ data }) {
     
     const observer = new ResizeObserver(updateDimensions);
     observer.observe(containerRef.current);
-    
-    // Initial read
     updateDimensions();
-    
-    // Fallback for delayed layouts
     const timeoutId = setTimeout(updateDimensions, 100);
     
     return () => {
@@ -35,16 +32,15 @@ export default function ThreatForceGraph({ data }) {
     };
   }, []);
 
-  const { nodes, links } = useMemo(() => {
-    if (!data || data.length === 0) return { nodes: [], links: [] };
+  const { nodes, links, hubNeighbors } = useMemo(() => {
+    if (!data || data.length === 0) return { nodes: [], links: [], hubNeighbors: new Map() };
 
     const nodeMap = new Map();
     const linkList = [];
+    const neighbors = new Map();
 
-    // First pass: collect attack types so we can anchor them radially
     const attackTypes = [...new Set(data.map(d => d.target))];
-    const centerX = 0, centerY = 0;
-    const radius = 180;
+    const radius = Math.max(260, attackTypes.length * 45); // scale radius with hub count
 
     attackTypes.forEach((type, i) => {
       const angle = (i / attackTypes.length) * 2 * Math.PI - Math.PI / 2;
@@ -52,23 +48,28 @@ export default function ThreatForceGraph({ data }) {
         id: type,
         group: 'attack_type',
         val: 0,
-        fx: centerX + radius * Math.cos(angle),
-        fy: centerY + radius * Math.sin(angle),
+        fx: radius * Math.cos(angle),
+        fy: radius * Math.sin(angle),
+        angle,
       });
+      neighbors.set(type, new Set());
     });
 
     data.forEach(d => {
       if (!nodeMap.has(d.source)) {
-        nodeMap.set(d.source, { id: d.source, group: 'api_key', val: d.weight });
+        nodeMap.set(d.source, { id: d.source, group: 'api_key', val: d.weight, hubCount: 0 });
       } else {
         nodeMap.get(d.source).val += d.weight;
       }
+      
+      nodeMap.get(d.source).hubCount = (nodeMap.get(d.source).hubCount || 0) + 1;
       nodeMap.get(d.target).val += d.weight;
-
       linkList.push({ source: d.source, target: d.target, value: d.weight });
+      
+      neighbors.get(d.target).add(d.source);
     });
 
-    return { nodes: [...nodeMap.values()], links: linkList };
+    return { nodes: [...nodeMap.values()], links: linkList, hubNeighbors: neighbors };
   }, [data]);
 
   useEffect(() => {
@@ -76,11 +77,18 @@ export default function ThreatForceGraph({ data }) {
     fgRef.current.d3Force('charge').strength(node => (node.group === 'attack_type' ? -200 : -350));
     fgRef.current.d3Force('link').distance(120).strength(0.5);
     fgRef.current.d3Force('center', null);
+    
+    // Zoom to fit on mount/data change
+    setTimeout(() => {
+      if (fgRef.current) fgRef.current.zoomToFit(400, 60);
+    }, 100);
   }, [nodes]);
 
   const getLinkId = (nodeOrString) => typeof nodeOrString === 'object' ? nodeOrString.id : nodeOrString;
 
   const handleNodeHover = node => {
+    if (selectedHub) return; // Disable hover tracing when a hub is isolated
+    
     const newNodes = new Set();
     const newLinks = new Set();
     
@@ -102,6 +110,8 @@ export default function ThreatForceGraph({ data }) {
   };
 
   const handleLinkHover = link => {
+    if (selectedHub) return; // Disable hover tracing when a hub is isolated
+    
     const newNodes = new Set();
     const newLinks = new Set();
     
@@ -115,6 +125,20 @@ export default function ThreatForceGraph({ data }) {
     
     setHighlightNodes(newNodes);
     setHighlightLinks(newLinks);
+  };
+
+  const handleNodeClick = node => {
+    if (node.group === 'attack_type') {
+      setSelectedHub(prev => prev === node.id ? null : node.id);
+      setHighlightNodes(new Set());
+      setHighlightLinks(new Set());
+    } else {
+      setSelectedHub(null);
+    }
+  };
+
+  const handleBackgroundClick = () => {
+    setSelectedHub(null);
   };
 
   return (
@@ -133,29 +157,62 @@ export default function ThreatForceGraph({ data }) {
             cooldownTicks={100}
             onNodeHover={handleNodeHover}
             onLinkHover={handleLinkHover}
+            onNodeClick={handleNodeClick}
+            onBackgroundClick={handleBackgroundClick}
             linkColor={link => {
               const sourceId = getLinkId(link.source);
               const targetId = getLinkId(link.target);
-              return highlightLinks.has(`${sourceId}-${targetId}`) 
-                ? 'rgba(255,255,255,0.6)' 
-                : (highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.12)')
+              
+              if (selectedHub) {
+                if (targetId === selectedHub) return 'rgba(255,255,255,0.6)';
+                return 'rgba(255,255,255,0.02)'; // Fade others hard
+              }
+              
+              if (highlightLinks.has(`${sourceId}-${targetId}`)) {
+                return 'rgba(255,255,255,0.6)';
+              }
+              
+              // Recede high-fan-out noisy edges
+              const sourceNode = typeof link.source === 'object' ? link.source : nodes.find(n => n.id === link.source);
+              if (sourceNode && sourceNode.hubCount > 2) {
+                return highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)';
+              }
+              
+              return highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.15)';
             }}
-            linkWidth={link => Math.min(link.value, 8)}
+            linkWidth={link => {
+              const sourceNode = typeof link.source === 'object' ? link.source : nodes.find(n => n.id === link.source);
+              if (!selectedHub && sourceNode && sourceNode.hubCount > 2) return 0.5; // Thinner
+              return Math.min(link.value, 8);
+            }}
             linkDirectionalArrowLength={3.5}
             linkDirectionalArrowRelPos={1}
             linkCurvature={0.15}
             nodeCanvasObject={(node, ctx, globalScale) => {
               const isHub = node.group === 'attack_type';
-              const label = isHub ? formatAttackType(node.id) : node.id.substring(0, 8);
+              const label = isHub ? formatAttackType(node.id) : (node.id.length > 12 ? node.id.substring(0, 12) + '...' : node.id);
               const fontSize = (isHub ? 13 : 11) / globalScale;
               
-              // Hover dimming
-              const isHighlighted = highlightNodes.has(node.id);
-              const dimOpacity = (highlightNodes.size > 0 && !isHighlighted) ? 0.2 : 1;
+              let dimOpacity = 1;
+              if (selectedHub) {
+                const isSelected = node.id === selectedHub;
+                const isNeighbor = !isHub && hubNeighbors.get(selectedHub)?.has(node.id);
+                dimOpacity = (isSelected || isNeighbor) ? 1 : 0.05;
+              } else if (highlightNodes.size > 0) {
+                dimOpacity = highlightNodes.has(node.id) ? 1 : 0.2;
+              }
 
               ctx.globalAlpha = dimOpacity;
 
-              ctx.fillStyle = isHub ? getAttackColor(node.id) : '#6B7280';
+              // Give hubs stark distinct categorical colors instead of theme lookup for now
+              const fallbackColors = ['#F87171', '#FBBF24', '#34D399', '#60A5FA', '#A78BFA', '#F472B6', '#38BDF8', '#4ADE80', '#FB923C'];
+              let hubColor = '#6B7280';
+              if (isHub) {
+                const attackTypes = [...hubNeighbors.keys()];
+                hubColor = fallbackColors[attackTypes.indexOf(node.id) % fallbackColors.length];
+              }
+
+              ctx.fillStyle = isHub ? hubColor : '#6B7280';
               const radius = isHub ? 14 : Math.sqrt(node.val) * 1.5 + 4;
 
               ctx.beginPath();
@@ -170,14 +227,18 @@ export default function ThreatForceGraph({ data }) {
               const textWidth = ctx.measureText(label).width;
               const bgWidth = textWidth + 8;
               const bgHeight = fontSize + 4;
+              
+              // Directional label placement to avoid collisions
+              const labelBelow = node.fy !== undefined ? node.fy > 0 : true;
+              const labelY = labelBelow ? node.y + radius + 4 : node.y - radius - 4 - bgHeight;
 
               ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
-              ctx.fillRect(node.x - bgWidth / 2, node.y + radius + 4, bgWidth, bgHeight);
+              ctx.fillRect(node.x - bgWidth / 2, labelY, bgWidth, bgHeight);
 
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = isHub ? '#E5E7EB' : '#9CA3AF';
-              ctx.fillText(label, node.x, node.y + radius + 4 + bgHeight / 2);
+              ctx.fillText(label, node.x, labelY + bgHeight / 2);
               
               ctx.globalAlpha = 1;
             }}
@@ -197,7 +258,7 @@ export default function ThreatForceGraph({ data }) {
           
           <div className="absolute bottom-4 left-4 pointer-events-none">
             <div className="text-[10px] font-mono text-luma-500 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
-              Edge thickness = Event frequency • Hover to isolate
+              Edge thickness = Event frequency • Click Hub to isolate
             </div>
           </div>
         </>
