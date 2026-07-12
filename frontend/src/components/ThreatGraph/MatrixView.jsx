@@ -3,8 +3,9 @@ import { formatAttackType, getAttackColor } from '../../utils/formatters';
 
 const FALLBACK_PALETTE = ['#F87171','#FBBF24','#34D399','#60A5FA','#A78BFA','#F472B6','#38BDF8','#4ADE80','#FB923C'];
 const resolveColor = (t, i) => {
-  const c = getAttackColor?.(t);
-  return (c && c.toLowerCase() !== '#ffffff' && c.toLowerCase() !== 'white') ? c : FALLBACK_PALETTE[i % FALLBACK_PALETTE.length];
+  let c = getAttackColor?.(t);
+  if (c && typeof c === 'object') c = c.text || c.border;
+  return (c && typeof c === 'string' && c.toLowerCase() !== '#ffffff' && c.toLowerCase() !== 'white') ? c : FALLBACK_PALETTE[i % FALLBACK_PALETTE.length];
 };
 
 export default function MatrixView({ data }) {

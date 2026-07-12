@@ -88,7 +88,8 @@ export function getRiskBg(score, isBlocked = false) {
  */
 export function formatAttackType(type) {
   if (!type) return '—';
-  if (type.startsWith("pii_detected:")) {
+  const t = String(type);
+  if (t.startsWith("pii_detected:")) {
     const piiType = type.split(":")[1]?.toUpperCase() || "DATA";
     return `PII Leak (${piiType})`;
   }
@@ -120,18 +121,19 @@ export function formatAttackType(type) {
       injection: 'Injection',
       cumulative_risk_exceeded: 'Cumulative Risk Exceeded',
     };
-    return map[type.toLowerCase()] || type || '—';
+    return map[t.toLowerCase()] || t || '—';
 }
 
 import { THREAT } from './theme';
 
 export function getAttackColor(type) {
   if (!type) return THREAT.muted;
+  const t = String(type);
 
-  if (type.startsWith("pii_detected:")) return THREAT.red;
-  if (type.startsWith("refusal_bypass:")) return THREAT.amber;
-  if (type.startsWith("indirect_injection:")) return THREAT.purple;
-  if (type.startsWith("canary_echo:")) return THREAT.blue;
+  if (t.startsWith("pii_detected:")) return THREAT.red;
+  if (t.startsWith("refusal_bypass:")) return THREAT.amber;
+  if (t.startsWith("indirect_injection:")) return THREAT.purple;
+  if (t.startsWith("canary_echo:")) return THREAT.blue;
 
   const map = {
     role_override: THREAT.red,
@@ -151,7 +153,7 @@ export function getAttackColor(type) {
     injection: THREAT.red,
     cumulative_risk_exceeded: THREAT.amber,
   };
-  return map[type.toLowerCase()] || THREAT.muted;
+  return map[t.toLowerCase()] || THREAT.muted;
 }
 
 /**
