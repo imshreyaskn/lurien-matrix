@@ -32,7 +32,15 @@ export default function VelocityChart({ data }) {
         <div className="flex-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <XAxis dataKey="time" stroke="#444" tick={{fill: '#888', fontSize: 10, fontFamily: 'monospace'}} />
+              <XAxis 
+                dataKey="time" 
+                stroke="#444" 
+                tick={{fill: '#888', fontSize: 10, fontFamily: 'monospace'}}
+                tickFormatter={(timeStr) => {
+                  const parts = timeStr.split(' ');
+                  return parts.length > 1 ? parts[1] : timeStr;
+                }}
+              />
               <YAxis stroke="#444" tick={{fill: '#888', fontSize: 10, fontFamily: 'monospace'}} />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
