@@ -63,42 +63,48 @@ export default function ThreatForceGraph({ data }) {
 
   useEffect(() => {
     if (!fgRef.current) return;
-    fgRef.current.d3Force('charge').strength(node => (node.group === 'attack_type' ? -100 : -250));
-    fgRef.current.d3Force('link').distance(70).strength(1);
+    fgRef.current.d3Force('charge').strength(node => (node.group === 'attack_type' ? -200 : -350));
+    fgRef.current.d3Force('link').distance(120).strength(0.5);
     fgRef.current.d3Force('center', null);
   }, [nodes]);
 
+  const getLinkId = (nodeOrString) => typeof nodeOrString === 'object' ? nodeOrString.id : nodeOrString;
+
   const handleNodeHover = node => {
-    highlightNodes.clear();
-    highlightLinks.clear();
+    const newNodes = new Set();
+    const newLinks = new Set();
     
     if (node) {
-      highlightNodes.add(node.id);
+      newNodes.add(node.id);
       links.forEach(l => {
-        if (l.source.id === node.id || l.target.id === node.id) {
-          highlightLinks.add(l);
-          highlightNodes.add(l.source.id);
-          highlightNodes.add(l.target.id);
+        const sourceId = getLinkId(l.source);
+        const targetId = getLinkId(l.target);
+        if (sourceId === node.id || targetId === node.id) {
+          newLinks.add(`${sourceId}-${targetId}`);
+          newNodes.add(sourceId);
+          newNodes.add(targetId);
         }
       });
     }
     
-    setHighlightNodes(new Set(highlightNodes));
-    setHighlightLinks(new Set(highlightLinks));
+    setHighlightNodes(newNodes);
+    setHighlightLinks(newLinks);
   };
 
   const handleLinkHover = link => {
-    highlightNodes.clear();
-    highlightLinks.clear();
+    const newNodes = new Set();
+    const newLinks = new Set();
     
     if (link) {
-      highlightLinks.add(link);
-      highlightNodes.add(link.source.id);
-      highlightNodes.add(link.target.id);
+      const sourceId = getLinkId(link.source);
+      const targetId = getLinkId(link.target);
+      newLinks.add(`${sourceId}-${targetId}`);
+      newNodes.add(sourceId);
+      newNodes.add(targetId);
     }
     
-    setHighlightNodes(new Set(highlightNodes));
-    setHighlightLinks(new Set(highlightLinks));
+    setHighlightNodes(newNodes);
+    setHighlightLinks(newLinks);
   };
 
   if (!data || data.length === 0) {
@@ -110,7 +116,7 @@ export default function ThreatForceGraph({ data }) {
   }
 
   return (
-    <div ref={containerRef} className="absolute inset-0 w-full h-full bg-luma-100 rounded-xl overflow-hidden cursor-crosshair">
+    <div ref={containerRef} className="absolute inset-0 w-full h-full bg-transparent overflow-hidden cursor-crosshair">
       <ForceGraph2D
         ref={fgRef}
         width={dimensions.width}
@@ -119,11 +125,13 @@ export default function ThreatForceGraph({ data }) {
         cooldownTicks={100}
         onNodeHover={handleNodeHover}
         onLinkHover={handleLinkHover}
-        linkColor={link => 
-          highlightLinks.has(link) 
+        linkColor={link => {
+          const sourceId = getLinkId(link.source);
+          const targetId = getLinkId(link.target);
+          return highlightLinks.has(`${sourceId}-${targetId}`) 
             ? 'rgba(255,255,255,0.6)' 
             : (highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.12)')
-        }
+        }}
         linkWidth={link => Math.min(link.value, 8)}
         linkDirectionalArrowLength={3.5}
         linkDirectionalArrowRelPos={1}
