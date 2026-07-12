@@ -20,8 +20,8 @@ flowchart LR
         App2["Coding Assistant (API Key B)"]
     end
     
-    User -- "Sends Prompt" --> App1
-    User -- "Sends Prompt" --> App2
+    LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
+    Block(["403 Blocked\n(Threat Report)"])
     
     subgraph Firewall["Lurien Matrix Firewall"]
         direction TB
@@ -39,25 +39,33 @@ flowchart LR
         L5 -->|Pass| L6
     end
     
-    Block(["403 Blocked\n(Threat Report)"])
-    LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
-
+    %% Forward Flow
+    User -- "Sends Prompt" --> App1
+    User -- "Sends Prompt" --> App2
+    
     App1 -- "API Request" --> L1
     App2 -- "API Request" --> L1
     
-    L1 -. "Data Exfiltration" .-> Block
-    L2 -. "Direct Injection" .-> Block
-    L3 -. "Obfuscation / Anomalies" .-> Block
-    L4 -. "Known Attack Vectors" .-> Block
-    L5 -. "Complex Injections" .-> Block
-    L6 -. "Persona Hijacking" .-> Block
+    %% Backward Flow from Firewall (forces Firewall to the right)
+    Block <-- "Data Exfiltration" --- L1
+    Block <-- "Direct Injection" --- L2
+    Block <-- "Obfuscation / Anomalies" --- L3
+    Block <-- "Known Attack Vectors" --- L4
+    Block <-- "Complex Injections" --- L5
+    Block <-- "Persona Hijacking" --- L6
     
-    L6 -- "SAFE (Forwarded)" --> LLM
+    LLM <-- "SAFE (Forwarded)" --- L6
     
-    App1 <-. "Response" .- LLM
-    App2 <-. "Response" .- LLM
-    User <-. "Response" .- App1
-    User <-. "Response" .- App2
+    %% Backward Flow from Providers to Clients
+    App1 <-- "Response" --- LLM
+    App2 <-- "Response" --- LLM
+    
+    App1 <-- "403 Response" --- Block
+    App2 <-- "403 Response" --- Block
+    
+    %% Backward Flow from Clients to User
+    User <-- "Response" --- App1
+    User <-- "Response" --- App2
 ```
 
 1. **Canary Token Detector**
