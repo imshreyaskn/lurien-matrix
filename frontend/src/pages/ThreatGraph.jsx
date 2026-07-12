@@ -64,7 +64,7 @@ export default function ThreatGraph() {
       <div className="flex flex-col gap-6 w-full">
         {/* Main Visual: Force Graph (Full Width) */}
         {!isOffline && (
-          <div className="relative flex-1 flex flex-col min-h-[600px] xl:min-h-[calc(100vh-400px)] w-full">
+          <div className="relative flex flex-col min-h-[600px] w-full">
             <h2 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2 px-6 pt-6">
               <Network className="w-4 h-4 text-accent-gold" />
               Coordination Intelligence (Key → Attack)
