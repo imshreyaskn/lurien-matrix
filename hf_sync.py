@@ -3,10 +3,10 @@ import shutil
 import subprocess
 
 def deploy_hf():
-    print("Cloning fresh copy to hf_space_v2...")
-    subprocess.run(["git", "clone", "https://huggingface.co/spaces/imDrizzle/lurien-matrix-firewall", "hf_space_v2"], cwd="e:/Drizzle/VS", check=True)
+    print("Cloning fresh copy to hf_space_v3...")
+    subprocess.run(["git", "clone", "https://huggingface.co/spaces/imDrizzle/lurien-matrix-firewall", "hf_space_v3"], cwd="e:/Drizzle/VS", check=True)
     
-    hf_dir = "e:/Drizzle/VS/hf_space_v2"
+    hf_dir = "e:/Drizzle/VS/hf_space_v3"
     backend_dir = "e:/Drizzle/VS/firewall/backend"
     
     print("Clearing old files in HF repo...")

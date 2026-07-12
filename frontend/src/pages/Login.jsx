@@ -27,6 +27,19 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await login('demo@lurien.ai', 'demo1234');
+      navigate('/');
+    } catch (err) {
+      setError(err.detail || 'Failed to login to demo account.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden scanline">
       {/* Background Decor */}
@@ -69,13 +82,24 @@ export default function Login() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-4 inverted-chip w-full py-4 flex items-center justify-center gap-2 hover:bg-luma-900 transition-colors disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'INITIALIZE SESSION'}
-          </button>
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="inverted-chip w-full py-4 flex items-center justify-center gap-2 hover:bg-luma-900 transition-colors disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'INITIALIZE SESSION'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full py-4 flex items-center justify-center gap-2 border border-luma-300 text-luma-FFF hover:bg-luma-100 transition-colors disabled:opacity-50 text-sm tracking-widest font-mono"
+            >
+              ONE-CLICK DEMO ACCESS
+            </button>
+          </div>
         </form>
 
         <div className="text-center mt-4">
