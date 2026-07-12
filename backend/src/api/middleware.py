@@ -77,13 +77,6 @@ async def validate_api_key(
             },
         )
 
-    # Update last_used_at
-    from datetime import datetime, timezone
-    await keys_collection.update_one(
-        {"_id": key_doc["_id"]},
-        {"$set": {"last_used_at": datetime.now(timezone.utc)}},
-    )
-
     # Attach rate limit info for response headers
     request.state.rate_limit = rate_status
     request.state.api_key_doc = key_doc
@@ -144,12 +137,6 @@ async def resolve_check_auth(request: Request) -> dict:
     rate_status = await redis_db.check_rate_limit(api_key_id=str(key_doc["_id"]))
     if not rate_status.allowed:
         raise HTTPException(status_code=429, detail={"error": "rate_limit_exceeded"})
-
-    from datetime import datetime, timezone
-    await keys_collection.update_one(
-        {"_id": key_doc["_id"]},
-        {"$set": {"last_used_at": datetime.now(timezone.utc)}},
-    )
 
     request.state.rate_limit = rate_status
     request.state.api_key_doc = key_doc

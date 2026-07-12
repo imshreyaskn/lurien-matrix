@@ -24,7 +24,22 @@ export default function FloatingIsland() {
         <div className="w-8 h-8 flex items-center justify-center">
           <img src="/logo.png" alt="Lurien" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
         </div>
-        <div className={`w-2 h-2 rounded-lg shadow-[0_0_10px_currentColor] ${error ? 'bg-status-offline text-status-offline' : 'bg-status-online text-status-online'}`} title={error ? 'System Offline' : 'System Online'} />
+        <div 
+          className={`w-2 h-2 rounded-lg shadow-[0_0_10px_currentColor] ${
+            error || (healthData && !healthData.db_connected && !healthData.neo4j_connected && !healthData.classifier_loaded)
+              ? 'bg-status-offline text-status-offline' 
+              : healthData && healthData.status === 'degraded'
+              ? 'bg-accent-gold text-accent-gold'
+              : 'bg-status-online text-status-online'
+          }`} 
+          title={
+            error || (healthData && !healthData.db_connected && !healthData.neo4j_connected && !healthData.classifier_loaded)
+              ? 'System Offline'
+              : healthData && healthData.status === 'degraded'
+              ? 'System Degraded'
+              : 'System Online'
+          } 
+        />
       </div>
 
       {/* Nav Items */}

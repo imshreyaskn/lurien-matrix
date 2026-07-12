@@ -177,7 +177,10 @@ async def proxy_llm_request(
 
     # Update key stats
     try:
-        update = {"$inc": {"total_checks": 1, "monthly_usage": 1}}
+        update = {
+            "$inc": {"total_checks": 1, "monthly_usage": 1},
+            "$set": {"last_used_at": datetime.now(timezone.utc)}
+        }
         if not result.safe:
             update["$inc"]["total_blocked"] = 1
         await mongo.get_keys_collection().update_one(

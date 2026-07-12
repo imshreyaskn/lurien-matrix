@@ -25,9 +25,13 @@ export default function LiveMonitor() {
   const prevLogsRef = useRef([]);
 
   const { data: logsData } = usePolling(() => api.getLogs({ limit: 15 }), 3000);
+  const { data: stats } = usePolling(() => api.getStats(), 5000);
 
   const logs = logsData?.logs || [];
-  if (logsData) console.log('[monitor] poll →', { total: logsData.total, count: logs.length });
+  
+  const activeLayersCount = stats?.layer_effectiveness
+    ? Object.values(stats.layer_effectiveness).filter(v => v > 0).length
+    : 0;
 
   // Detect new events for animation
   useEffect(() => {
@@ -82,7 +86,9 @@ export default function LiveMonitor() {
         </div>
         <div className="flex items-center gap-2 px-4 py-2 border border-white/10 bg-white/5 rounded-full backdrop-blur-md shadow-lg">
           <div className="w-2 h-2 rounded-full bg-status-online shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-          <span className="text-xs font-mono tracking-widest uppercase text-luma-FFF">Sys_Status: Active</span>
+          <span className="text-xs font-mono tracking-widest uppercase text-luma-FFF">
+            Sys_Status: {activeLayersCount > 0 ? `${activeLayersCount}/6 Layers Active` : 'Active'}
+          </span>
         </div>
       </div>
 
