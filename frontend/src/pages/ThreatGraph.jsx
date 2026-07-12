@@ -19,7 +19,7 @@ export default function ThreatGraph() {
   const { data: chainsRes } = usePolling(() => api.getSessionChains(), 30000);
 
   const isOffline = statsRes?.status === 'graph_offline';
-  const data = statsRes?.data || { force_graph: [], layer_bypass: [], top_replayed: [], api_key_breakdown: [] };
+  const data = statsRes?.data || { force_graph: [], layer_bypass: [], top_replayed: [], api_key_breakdown: [], flow_data: [], replay_counts: {} };
   const velocityData = velocityRes?.data || [];
   const sessions = chainsRes?.data || [];
 
@@ -74,7 +74,7 @@ export default function ThreatGraph() {
               </h2>
               <div className="flex-1 w-full relative">
                 <ErrorBoundary>
-                  <ThreatCoordinationGraph data={data.force_graph} />
+                  <ThreatCoordinationGraph data={data.force_graph} flowData={data.flow_data} replayCounts={data.replay_counts} />
                 </ErrorBoundary>
               </div>
             </div>
