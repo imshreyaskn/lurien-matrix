@@ -117,91 +117,91 @@ export default function ThreatForceGraph({ data }) {
     setHighlightLinks(newLinks);
   };
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="h-full min-h-[400px] flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest border border-white/5 rounded-xl bg-luma-100">
-        No coordination data available
-      </div>
-    );
-  }
-
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full bg-transparent overflow-hidden cursor-crosshair">
-      <ForceGraph2D
-        ref={fgRef}
-        width={dimensions.width}
-        height={dimensions.height}
-        graphData={{ nodes, links }}
-        cooldownTicks={100}
-        onNodeHover={handleNodeHover}
-        onLinkHover={handleLinkHover}
-        linkColor={link => {
-          const sourceId = getLinkId(link.source);
-          const targetId = getLinkId(link.target);
-          return highlightLinks.has(`${sourceId}-${targetId}`) 
-            ? 'rgba(255,255,255,0.6)' 
-            : (highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.12)')
-        }}
-        linkWidth={link => Math.min(link.value, 8)}
-        linkDirectionalArrowLength={3.5}
-        linkDirectionalArrowRelPos={1}
-        linkCurvature={0.15}
-        nodeCanvasObject={(node, ctx, globalScale) => {
-          const isHub = node.group === 'attack_type';
-          const label = isHub ? formatAttackType(node.id) : node.id.substring(0, 8);
-          const fontSize = (isHub ? 13 : 11) / globalScale;
+      {(!data || data.length === 0) ? (
+        <div className="w-full h-full flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest border border-white/5 rounded-xl bg-luma-100">
+          No coordination data available
+        </div>
+      ) : (
+        <>
+          <ForceGraph2D
+            ref={fgRef}
+            width={dimensions.width}
+            height={dimensions.height}
+            graphData={{ nodes, links }}
+            cooldownTicks={100}
+            onNodeHover={handleNodeHover}
+            onLinkHover={handleLinkHover}
+            linkColor={link => {
+              const sourceId = getLinkId(link.source);
+              const targetId = getLinkId(link.target);
+              return highlightLinks.has(`${sourceId}-${targetId}`) 
+                ? 'rgba(255,255,255,0.6)' 
+                : (highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.12)')
+            }}
+            linkWidth={link => Math.min(link.value, 8)}
+            linkDirectionalArrowLength={3.5}
+            linkDirectionalArrowRelPos={1}
+            linkCurvature={0.15}
+            nodeCanvasObject={(node, ctx, globalScale) => {
+              const isHub = node.group === 'attack_type';
+              const label = isHub ? formatAttackType(node.id) : node.id.substring(0, 8);
+              const fontSize = (isHub ? 13 : 11) / globalScale;
+              
+              // Hover dimming
+              const isHighlighted = highlightNodes.has(node.id);
+              const dimOpacity = (highlightNodes.size > 0 && !isHighlighted) ? 0.2 : 1;
+
+              ctx.globalAlpha = dimOpacity;
+
+              ctx.fillStyle = isHub ? getAttackColor(node.id) : '#6B7280';
+              const radius = isHub ? 14 : Math.sqrt(node.val) * 1.5 + 4;
+
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+              ctx.fill();
+
+              ctx.strokeStyle = isHub ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
+              ctx.lineWidth = isHub ? 2 : 1;
+              ctx.stroke();
+
+              ctx.font = `${isHub ? 'bold ' : ''}${fontSize}px "JetBrains Mono", monospace`;
+              const textWidth = ctx.measureText(label).width;
+              const bgWidth = textWidth + 8;
+              const bgHeight = fontSize + 4;
+
+              ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+              ctx.fillRect(node.x - bgWidth / 2, node.y + radius + 4, bgWidth, bgHeight);
+
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = isHub ? '#E5E7EB' : '#9CA3AF';
+              ctx.fillText(label, node.x, node.y + radius + 4 + bgHeight / 2);
+              
+              ctx.globalAlpha = 1;
+            }}
+          />
           
-          // Hover dimming
-          const isHighlighted = highlightNodes.has(node.id);
-          const dimOpacity = (highlightNodes.size > 0 && !isHighlighted) ? 0.2 : 1;
-
-          ctx.globalAlpha = dimOpacity;
-
-          ctx.fillStyle = isHub ? getAttackColor(node.id) : '#6B7280';
-          const radius = isHub ? 14 : Math.sqrt(node.val) * 1.5 + 4;
-
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-          ctx.fill();
-
-          ctx.strokeStyle = isHub ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
-          ctx.lineWidth = isHub ? 2 : 1;
-          ctx.stroke();
-
-          ctx.font = `${isHub ? 'bold ' : ''}${fontSize}px "JetBrains Mono", monospace`;
-          const textWidth = ctx.measureText(label).width;
-          const bgWidth = textWidth + 8;
-          const bgHeight = fontSize + 4;
-
-          ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
-          ctx.fillRect(node.x - bgWidth / 2, node.y + radius + 4, bgWidth, bgHeight);
-
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = isHub ? '#E5E7EB' : '#9CA3AF';
-          ctx.fillText(label, node.x, node.y + radius + 4 + bgHeight / 2);
+          {/* Legends */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+            <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#6B7280] mr-2"></span>
+              API Keys (Size = Traffic)
+            </div>
+            <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+              <span className="inline-block w-2 h-2 rounded-full bg-white mr-2"></span>
+              Hubs = Attack Types
+            </div>
+          </div>
           
-          ctx.globalAlpha = 1;
-        }}
-      />
-      
-      {/* Legends */}
-      <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
-        <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#6B7280] mr-2"></span>
-          API Keys (Size = Traffic)
-        </div>
-        <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
-          <span className="inline-block w-2 h-2 rounded-full bg-white mr-2"></span>
-          Hubs = Attack Types
-        </div>
-      </div>
-      
-      <div className="absolute bottom-4 left-4 pointer-events-none">
-        <div className="text-[10px] font-mono text-luma-500 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
-          Edge thickness = Event frequency • Hover to isolate
-        </div>
-      </div>
+          <div className="absolute bottom-4 left-4 pointer-events-none">
+            <div className="text-[10px] font-mono text-luma-500 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+              Edge thickness = Event frequency • Hover to isolate
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
