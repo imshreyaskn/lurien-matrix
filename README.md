@@ -11,11 +11,11 @@ Lurien Matrix is a production-grade, true proxy-based firewall engineered to sec
 Lurien Matrix utilizes a six-layer defense pipeline, engineered to provide comprehensive security with minimal latency impact.
 
 ```mermaid
-flowchart LR
+flowchart TD
     User(["End User"])
     
     subgraph ClientApps["Client Applications"]
-        direction TB
+        direction LR
         App1["HR Bot (API Key A)"]
         App2["Coding Assistant (API Key B)"]
     end
@@ -23,30 +23,36 @@ flowchart LR
     User -->|"Sends Prompt"| ClientApps
     
     subgraph Firewall["Lurien Matrix Firewall"]
-        direction TB
+        direction TD
         L1["① Canary Token Detector"]
         L2["② Rule-Based Engine"]
         L3["③ Heuristic Analysis"]
         L4["④ Embedding Similarity"]
         L5["⑤ ML Classifier"]
         L6["⑥ Context Policy"]
-        L1 --> L2 --> L3 --> L4 --> L5 --> L6
+        
+        L1 -->|Pass| L2
+        L2 -->|Pass| L3
+        L3 -->|Pass| L4
+        L4 -->|Pass| L5
+        L5 -->|Pass| L6
     end
     
     ClientApps -->|"API Request"| L1
     
+    Block(["403 Blocked\n(Threat Report)"])
     LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
-    Block(["403 Blocked\nThreat Report"])
 
-    L6 -->|"SAFE"| LLM
-    LLM -.->|"Response"| ClientApps
+    L1 -.->|"Data Exfiltration"| Block
+    L2 -.->|"Direct Injection"| Block
+    L3 -.->|"Obfuscation / Anomalies"| Block
+    L4 -.->|"Known Attack Vectors"| Block
+    L5 -.->|"Complex Injections"| Block
+    L6 -.->|"Persona Hijacking"| Block
     
-    L1 -->|"Data Exfiltration"| Block
-    L2 -->|"Direct Injection"| Block
-    L3 -->|"Obfuscation / Anomalies"| Block
-    L4 -->|"Known Attack Vectors"| Block
-    L5 -->|"Complex Injections"| Block
-    L6 -->|"Persona Hijacking"| Block
+    L6 -->|"SAFE (Forwarded)"| LLM
+    LLM -.->|"Response"| ClientApps
+    ClientApps -.->|"Response"| User
 ```
 
 1. **Canary Token Detector**
