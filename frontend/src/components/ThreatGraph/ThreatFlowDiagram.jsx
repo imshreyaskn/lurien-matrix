@@ -165,14 +165,6 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
     return { col1, col2, col3, links1, links2 };
   }, [model, size]);
 
-  if (!model || !layout) {
-    return (
-      <div className="h-full min-h-[400px] flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest">
-        No flow data available
-      </div>
-    );
-  }
-
   const anyActive = hoverKey || hoverAttack || hoverLayer;
 
   const link1Active = (l) =>
@@ -183,9 +175,9 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
   const link2Active = (l) =>
     (hoverAttack && l.attack === hoverAttack) ||
     (hoverLayer && l.layer === hoverLayer) ||
-    (hoverKey && layout.links1.some(x => x.key === hoverKey && x.attack === l.attack));
+    (hoverKey && layout?.links1.some(x => x.key === hoverKey && x.attack === l.attack));
 
-  const totalEvents = [...model.keyTotals.values()].reduce((a, b) => a + b, 0);
+  const totalEvents = model ? [...model.keyTotals.values()].reduce((a, b) => a + b, 0) : 0;
 
   return (
     <div ref={containerRef} className="relative w-full h-full min-h-[560px] bg-[#08090b] rounded-xl overflow-hidden">
@@ -207,167 +199,175 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
         <rect width="100%" height="100%" fill="url(#hexgrid)" />
       </svg>
 
-      {/* Header stats */}
-      <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-          Attack Pipeline — Key → Attack → Detection
-        </span>
-        <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
-          <span>{model.keyItems.length} keys</span>
-          <span>{model.attackTypesOrdered.length} attacks</span>
-          <span>{model.layerItems.length} layers</span>
-          <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
+      {(!model || !layout) ? (
+        <div className="absolute inset-0 flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest z-10 pointer-events-none">
+          No flow data available
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Header stats */}
+          <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+              Attack Pipeline — Key → Attack → Detection
+            </span>
+            <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
+              <span>{model.keyItems.length} keys</span>
+              <span>{model.attackTypesOrdered.length} attacks</span>
+              <span>{model.layerItems.length} layers</span>
+              <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
+            </div>
+          </div>
 
-      {/* Column headers */}
-      <div className="absolute top-0 left-0 w-full z-10 pointer-events-none" style={{ paddingTop: size.h > 600 ? 24 : 18 }}>
-        <div className="flex justify-between px-6">
-          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>API Keys</span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Attack Types</span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Detection Layers</span>
-        </div>
-      </div>
+          {/* Column headers */}
+          <div className="absolute top-0 left-0 w-full z-10 pointer-events-none" style={{ paddingTop: size.h > 600 ? 24 : 18 }}>
+            <div className="flex justify-between px-6">
+              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>API Keys</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Attack Types</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Detection Layers</span>
+            </div>
+          </div>
 
-      {/* Main SVG */}
-      <svg width={size.w} height={size.h} className="relative z-[1]"
-        onMouseLeave={() => { setHoverKey(null); setHoverAttack(null); setHoverLayer(null); }}
-        style={{ pointerEvents: 'all' }}
-      >
-        {/* Stage 1 ribbons: Key -> Attack */}
-        <g>
-          {layout.links1.map((l, i) => (
-            <path
-              key={`l1-${i}`}
-              d={ribbonPath(l.x0, l.y0Top, l.y0Bot, l.x1, l.y1Top, l.y1Bot)}
-              fill={l.color}
-              fillOpacity={anyActive ? (link1Active(l) ? 0.5 : 0.03) : 0.16}
-              filter={link1Active(l) ? 'url(#ribbonGlow)' : undefined}
-              style={{ transition: 'fill-opacity 150ms ease' }}
-            />
-          ))}
-        </g>
-
-        {/* Stage 2 ribbons: Attack -> Layer */}
-        <g>
-          {layout.links2.map((l, i) => (
-            <path
-              key={`l2-${i}`}
-              d={ribbonPath(l.x0, l.y0Top, l.y0Bot, l.x1, l.y1Top, l.y1Bot)}
-              fill={l.color}
-              fillOpacity={anyActive ? (link2Active(l) ? 0.5 : 0.03) : 0.14}
-              filter={link2Active(l) ? 'url(#ribbonGlow)' : undefined}
-              style={{ transition: 'fill-opacity 150ms ease' }}
-            />
-          ))}
-        </g>
-
-        {/* Column 1: API Keys */}
-        {layout.col1.map(n => {
-          const dim = anyActive && hoverKey !== n.id && !(hoverAttack && layout.links1.some(l => l.key === n.id && l.attack === hoverAttack));
-          return (
-            <g key={n.id}
-              onMouseEnter={() => { setHoverKey(n.id); setHoverAttack(null); setHoverLayer(null); }}
-              className="cursor-pointer"
-            >
-              <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
-                fill="#6B7280" fillOpacity={dim ? 0.12 : 0.7}
-                stroke="rgba(255,255,255,0.08)" strokeWidth={0.5}
-              />
-              <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono"
-                style={{ fontSize: 10, fill: dim ? 'rgba(255,255,255,0.2)' : '#E5E7EB', transition: 'fill 150ms' }}
-              >
-                {n.id.length > 16 ? n.id.substring(0, 16) + '…' : n.id}
-              </text>
-              {n.h > 24 && (
-                <text x={n.x + COL_W - 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" textAnchor="end" className="font-mono"
-                  style={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)' }}
-                >
-                  {n.value}
-                </text>
-              )}
+          {/* Main SVG */}
+          <svg width={size.w} height={size.h} className="relative z-[1]"
+            onMouseLeave={() => { setHoverKey(null); setHoverAttack(null); setHoverLayer(null); }}
+            style={{ pointerEvents: 'all' }}
+          >
+            {/* Stage 1 ribbons: Key -> Attack */}
+            <g>
+              {layout.links1.map((l, i) => (
+                <path
+                  key={`l1-${i}`}
+                  d={ribbonPath(l.x0, l.y0Top, l.y0Bot, l.x1, l.y1Top, l.y1Bot)}
+                  fill={l.color}
+                  fillOpacity={anyActive ? (link1Active(l) ? 0.5 : 0.03) : 0.16}
+                  filter={link1Active(l) ? 'url(#ribbonGlow)' : undefined}
+                  style={{ transition: 'fill-opacity 150ms ease' }}
+                />
+              ))}
             </g>
-          );
-        })}
 
-        {/* Column 2: Attack Types */}
-        {layout.col2.map(n => {
-          const dim = anyActive && hoverAttack !== n.id &&
-            !(hoverKey && layout.links1.some(l => l.attack === n.id && l.key === hoverKey)) &&
-            !(hoverLayer && layout.links2.some(l => l.attack === n.id && l.layer === hoverLayer));
-          const replay = replayCounts[n.id];
-          return (
-            <g key={n.id}
-              onMouseEnter={() => { setHoverAttack(n.id); setHoverKey(null); setHoverLayer(null); }}
-              className="cursor-pointer"
-            >
-              <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
-                fill={n.color} fillOpacity={dim ? 0.12 : 0.85}
-                stroke={dim ? 'transparent' : n.color} strokeWidth={0.5} strokeOpacity={0.4}
-              />
-              {n.h > 16 && (
-                <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono uppercase"
-                  style={{ fontSize: 9.5, fontWeight: 600, fill: dim ? 'rgba(255,255,255,0.15)' : '#F3F4F6', letterSpacing: '0.03em', transition: 'fill 150ms' }}
+            {/* Stage 2 ribbons: Attack -> Layer */}
+            <g>
+              {layout.links2.map((l, i) => (
+                <path
+                  key={`l2-${i}`}
+                  d={ribbonPath(l.x0, l.y0Top, l.y0Bot, l.x1, l.y1Top, l.y1Bot)}
+                  fill={l.color}
+                  fillOpacity={anyActive ? (link2Active(l) ? 0.5 : 0.03) : 0.14}
+                  filter={link2Active(l) ? 'url(#ribbonGlow)' : undefined}
+                  style={{ transition: 'fill-opacity 150ms ease' }}
+                />
+              ))}
+            </g>
+
+            {/* Column 1: API Keys */}
+            {layout.col1.map(n => {
+              const dim = anyActive && hoverKey !== n.id && !(hoverAttack && layout.links1.some(l => l.key === n.id && l.attack === hoverAttack));
+              return (
+                <g key={n.id}
+                  onMouseEnter={() => { setHoverKey(n.id); setHoverAttack(null); setHoverLayer(null); }}
+                  className="cursor-pointer"
                 >
-                  {formatAttackType(n.id)}
-                </text>
-              )}
-              {replay > 0 && n.h > 16 && (
-                <g>
-                  <rect x={n.x + COL_W - 36} y={n.cy0 + n.h / 2 - 7} width={30} height={14} rx={7}
-                    fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.15)" strokeWidth={0.5}
+                  <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
+                    fill="#6B7280" fillOpacity={dim ? 0.12 : 0.7}
+                    stroke="rgba(255,255,255,0.08)" strokeWidth={0.5}
                   />
-                  <text x={n.x + COL_W - 21} y={n.cy0 + n.h / 2} textAnchor="middle" dominantBaseline="middle" className="font-mono"
-                    style={{ fontSize: 8, fill: '#FBBF24' }}
+                  <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono"
+                    style={{ fontSize: 10, fill: dim ? 'rgba(255,255,255,0.2)' : '#E5E7EB', transition: 'fill 150ms' }}
                   >
-                    ×{replay}
+                    {n.id.length > 16 ? n.id.substring(0, 16) + '…' : n.id}
                   </text>
+                  {n.h > 24 && (
+                    <text x={n.x + COL_W - 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" textAnchor="end" className="font-mono"
+                      style={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)' }}
+                    >
+                      {n.value}
+                    </text>
+                  )}
                 </g>
-              )}
-            </g>
-          );
-        })}
+              );
+            })}
 
-        {/* Column 3: Flagged Layers */}
-        {layout.col3.map(n => {
-          const dim = anyActive && hoverLayer !== n.id &&
-            !(hoverAttack && layout.links2.some(l => l.layer === n.id && l.attack === hoverAttack)) &&
-            !(hoverKey && layout.links1.some(l1 => l1.key === hoverKey && layout.links2.some(l2 => l2.attack === l1.attack && l2.layer === n.id)));
-          const layerColor = LAYER_COLORS[n.id] || '#38BDF8';
-          return (
-            <g key={n.id}
-              onMouseEnter={() => { setHoverLayer(n.id); setHoverKey(null); setHoverAttack(null); }}
-              className="cursor-pointer"
-            >
-              <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
-                fill={layerColor} fillOpacity={dim ? 0.1 : 0.65}
-                stroke={dim ? 'transparent' : layerColor} strokeWidth={0.5} strokeOpacity={0.3}
-              />
-              {n.h > 16 && (
-                <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono uppercase"
-                  style={{ fontSize: 9, fill: dim ? 'rgba(255,255,255,0.15)' : '#E0F2FE', letterSpacing: '0.03em', transition: 'fill 150ms' }}
+            {/* Column 2: Attack Types */}
+            {layout.col2.map(n => {
+              const dim = anyActive && hoverAttack !== n.id &&
+                !(hoverKey && layout.links1.some(l => l.attack === n.id && l.key === hoverKey)) &&
+                !(hoverLayer && layout.links2.some(l => l.attack === n.id && l.layer === hoverLayer));
+              const replay = replayCounts[n.id];
+              return (
+                <g key={n.id}
+                  onMouseEnter={() => { setHoverAttack(n.id); setHoverKey(null); setHoverLayer(null); }}
+                  className="cursor-pointer"
                 >
-                  {formatLayerName(n.id)}
-                </text>
-              )}
-              {n.h > 24 && (
-                <text x={n.x + COL_W - 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" textAnchor="end" className="font-mono"
-                  style={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)' }}
-                >
-                  {n.value}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+                  <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
+                    fill={n.color} fillOpacity={dim ? 0.12 : 0.85}
+                    stroke={dim ? 'transparent' : n.color} strokeWidth={0.5} strokeOpacity={0.4}
+                  />
+                  {n.h > 16 && (
+                    <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono uppercase"
+                      style={{ fontSize: 9.5, fontWeight: 600, fill: dim ? 'rgba(255,255,255,0.15)' : '#F3F4F6', letterSpacing: '0.03em', transition: 'fill 150ms' }}
+                    >
+                      {formatAttackType(n.id)}
+                    </text>
+                  )}
+                  {replay > 0 && n.h > 16 && (
+                    <g>
+                      <rect x={n.x + COL_W - 36} y={n.cy0 + n.h / 2 - 7} width={30} height={14} rx={7}
+                        fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.15)" strokeWidth={0.5}
+                      />
+                      <text x={n.x + COL_W - 21} y={n.cy0 + n.h / 2} textAnchor="middle" dominantBaseline="middle" className="font-mono"
+                        style={{ fontSize: 8, fill: '#FBBF24' }}
+                      >
+                        ×{replay}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
 
-      {/* Footer legend */}
-      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">
-        <span className="font-mono text-[9px] uppercase tracking-widest text-white/25">
-          Ribbon width = event volume · ×N = replayed payload hashes · hover to trace full chain
-        </span>
-      </div>
+            {/* Column 3: Flagged Layers */}
+            {layout.col3.map(n => {
+              const dim = anyActive && hoverLayer !== n.id &&
+                !(hoverAttack && layout.links2.some(l => l.layer === n.id && l.attack === hoverAttack)) &&
+                !(hoverKey && layout.links1.some(l1 => l1.key === hoverKey && layout.links2.some(l2 => l2.attack === l1.attack && l2.layer === n.id)));
+              const layerColor = LAYER_COLORS[n.id] || '#38BDF8';
+              return (
+                <g key={n.id}
+                  onMouseEnter={() => { setHoverLayer(n.id); setHoverKey(null); setHoverAttack(null); }}
+                  className="cursor-pointer"
+                >
+                  <rect x={n.x} y={n.cy0} width={COL_W} height={n.h} rx={3}
+                    fill={layerColor} fillOpacity={dim ? 0.1 : 0.65}
+                    stroke={dim ? 'transparent' : layerColor} strokeWidth={0.5} strokeOpacity={0.3}
+                  />
+                  {n.h > 16 && (
+                    <text x={n.x + 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" className="font-mono uppercase"
+                      style={{ fontSize: 9, fill: dim ? 'rgba(255,255,255,0.15)' : '#E0F2FE', letterSpacing: '0.03em', transition: 'fill 150ms' }}
+                    >
+                      {formatLayerName(n.id)}
+                    </text>
+                  )}
+                  {n.h > 24 && (
+                    <text x={n.x + COL_W - 8} y={n.cy0 + n.h / 2} dominantBaseline="middle" textAnchor="end" className="font-mono"
+                      style={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)' }}
+                    >
+                      {n.value}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Footer legend */}
+          <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-white/25">
+              Ribbon width = event volume · ×N = replayed payload hashes · hover to trace full chain
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
