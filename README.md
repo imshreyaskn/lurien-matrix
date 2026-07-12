@@ -39,33 +39,38 @@ flowchart LR
         L5 -->|Pass| L6
     end
     
-    %% Forward Flow
-    User -- "Sends Prompt" --> App1
-    User -- "Sends Prompt" --> App2
+    %% 1. Force Column Layout
+    User ~~~ App1
+    App1 ~~~ LLM
+    App2 ~~~ Block
+    LLM ~~~ L1
+    Block ~~~ L1
     
-    App1 -- "API Request" --> L1
-    App2 -- "API Request" --> L1
+    %% 2. Forward Data Flow
+    User -->|"Sends Prompt"| App1
+    User -->|"Sends Prompt"| App2
     
-    %% Backward Flow from Firewall (forces Firewall to the right)
-    Block <-- "Data Exfiltration" --- L1
-    Block <-- "Direct Injection" --- L2
-    Block <-- "Obfuscation / Anomalies" --- L3
-    Block <-- "Known Attack Vectors" --- L4
-    Block <-- "Complex Injections" --- L5
-    Block <-- "Persona Hijacking" --- L6
+    App1 -->|"API Request"| L1
+    App2 -->|"API Request"| L1
     
-    LLM <-- "SAFE (Forwarded)" --- L6
+    %% 3. Backward Flow (Routed right-to-left by layout engine)
+    L1 -.->|"Data Exfiltration"| Block
+    L2 -.->|"Direct Injection"| Block
+    L3 -.->|"Obfuscation / Anomalies"| Block
+    L4 -.->|"Known Attack Vectors"| Block
+    L5 -.->|"Complex Injections"| Block
+    L6 -.->|"Persona Hijacking"| Block
     
-    %% Backward Flow from Providers to Clients
-    App1 <-- "Response" --- LLM
-    App2 <-- "Response" --- LLM
+    L6 -->|"SAFE (Forwarded)"| LLM
     
-    App1 <-- "403 Response" --- Block
-    App2 <-- "403 Response" --- Block
+    LLM -->|"Response"| App1
+    LLM -->|"Response"| App2
     
-    %% Backward Flow from Clients to User
-    User <-- "Response" --- App1
-    User <-- "Response" --- App2
+    Block -->|"403 Response"| App1
+    Block -->|"403 Response"| App2
+    
+    App1 -.->|"Response"| User
+    App2 -.->|"Response"| User
 ```
 
 1. **Canary Token Detector**
