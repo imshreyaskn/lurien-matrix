@@ -11,19 +11,19 @@ Lurien Matrix is a production-grade, true proxy-based firewall engineered to sec
 Lurien Matrix utilizes a six-layer defense pipeline, engineered to provide comprehensive security with minimal latency impact.
 
 ```mermaid
-flowchart TD
-    User(["End User"])
-    
-    subgraph ClientApps["Client Applications"]
-        direction LR
+flowchart LR
+    subgraph Clients["Client Layer"]
+        direction TB
+        User(["End User"])
         App1["HR Bot (API Key A)"]
         App2["Coding Assistant (API Key B)"]
+        
+        User -->|"Sends Prompt"| App1
+        User -->|"Sends Prompt"| App2
     end
     
-    User -->|"Sends Prompt"| ClientApps
-    
     subgraph Firewall["Lurien Matrix Firewall"]
-        direction TD
+        direction TB
         L1["① Canary Token Detector"]
         L2["② Rule-Based Engine"]
         L3["③ Heuristic Analysis"]
@@ -38,11 +38,15 @@ flowchart TD
         L5 -->|Pass| L6
     end
     
-    ClientApps -->|"API Request"| L1
-    
-    Block(["403 Blocked\n(Threat Report)"])
-    LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
+    subgraph Outputs["Output Layer"]
+        direction TB
+        LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
+        Block(["403 Blocked\n(Threat Report)"])
+    end
 
+    App1 -->|"API Request"| L1
+    App2 -->|"API Request"| L1
+    
     L1 -.->|"Data Exfiltration"| Block
     L2 -.->|"Direct Injection"| Block
     L3 -.->|"Obfuscation / Anomalies"| Block
@@ -51,8 +55,8 @@ flowchart TD
     L6 -.->|"Persona Hijacking"| Block
     
     L6 -->|"SAFE (Forwarded)"| LLM
-    LLM -.->|"Response"| ClientApps
-    ClientApps -.->|"Response"| User
+    LLM -.->|"Response"| App1
+    LLM -.->|"Response"| App2
 ```
 
 1. **Canary Token Detector**
