@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import MatrixView from './MatrixView';
-import NetworkView from './NetworkView';
 import ThreatFlowDiagram from './ThreatFlowDiagram';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -10,7 +9,7 @@ export default function ThreatCoordinationGraph({ data, flowData, replayCounts }
     <div className="w-full h-full flex flex-col gap-2 relative">
       <div className="absolute -top-11 right-6 z-20 flex justify-end">
         <div className="flex items-center gap-1 bg-black/40 rounded-lg p-0.5 border border-white/10 backdrop-blur-sm">
-          {['pipeline', 'matrix', 'network'].map(v => (
+          {['pipeline', 'matrix'].map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -27,10 +26,8 @@ export default function ThreatCoordinationGraph({ data, flowData, replayCounts }
         <ErrorBoundary>
           {view === 'pipeline' ? (
             <ThreatFlowDiagram data={flowData} replayCounts={replayCounts} />
-          ) : view === 'matrix' ? (
-            <MatrixView data={data} />
           ) : (
-            <NetworkView data={data} />
+            <MatrixView data={data} />
           )}
         </ErrorBoundary>
       </div>
