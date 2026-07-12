@@ -8,7 +8,7 @@ export default function ThreatCoordinationGraph({ data, flowData, replayCounts }
   const [view, setView] = useState('pipeline');
   return (
     <div className="w-full h-full flex flex-col gap-2 relative">
-      <div className="absolute top-3 right-4 z-20 flex justify-end">
+      <div className="absolute -top-11 right-6 z-20 flex justify-end">
         <div className="flex items-center gap-1 bg-black/40 rounded-lg p-0.5 border border-white/10 backdrop-blur-sm">
           {['pipeline', 'matrix', 'network'].map(v => (
             <button

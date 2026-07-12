@@ -205,21 +205,8 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
         </div>
       ) : (
         <>
-          {/* Header stats */}
-          <div className="absolute top-3 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-              Attack Pipeline — Key → Attack → Detection
-            </span>
-            <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
-              <span>{model.keyItems.length} keys</span>
-              <span>{model.attackTypesOrdered.length} attacks</span>
-              <span>{model.layerItems.length} layers</span>
-              <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
-            </div>
-          </div>
-
           {/* Column headers */}
-          <div className="absolute top-0 left-0 w-full z-10 pointer-events-none" style={{ paddingTop: size.h > 600 ? 24 : 18 }}>
+          <div className="absolute top-4 left-0 w-full z-10 pointer-events-none">
             <div className="flex justify-between px-6">
               <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>API Keys</span>
               <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Attack Types</span>
@@ -365,6 +352,12 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
             <span className="font-mono text-[9px] uppercase tracking-widest text-white/25">
               Ribbon width = event volume · ×N = replayed payload hashes · hover to trace full chain
             </span>
+            <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
+              <span>{model.keyItems.length} keys</span>
+              <span>{model.attackTypesOrdered.length} attacks</span>
+              <span>{model.layerItems.length} layers</span>
+              <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
+            </div>
           </div>
         </>
       )}
