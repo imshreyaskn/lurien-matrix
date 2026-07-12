@@ -48,6 +48,8 @@ async def _create_indexes(db: AsyncIOMotorDatabase) -> None:
     await logs.create_index("timestamp")
     await logs.create_index("api_key_id")
     await logs.create_index("user_id")
+    await logs.create_index("session_id")
+    await logs.create_index("client_ip")
     await logs.create_index("safe")
     await logs.create_index("attack_type")
     await logs.create_index("provider")

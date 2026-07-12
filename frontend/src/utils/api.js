@@ -63,6 +63,8 @@ export const api = {
   // Dashboard
   getStats: () => apiFetch('/v1/stats'),
   getGraphStats: () => apiFetch('/v1/graph/stats'),
+  getThreatVelocity: () => apiFetch('/v1/graph/velocity'),
+  getSessionChains: () => apiFetch('/v1/graph/session-chains'),
 
   getLogs: (params = {}) => {
     const query = new URLSearchParams();

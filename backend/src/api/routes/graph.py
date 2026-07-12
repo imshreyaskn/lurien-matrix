@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from src.api.auth_middleware import validate_user_token
 from src.db.neo4j_client import get_driver, is_connected
+from src.db import mongo
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger("llm_firewall.routes.graph")
 
@@ -38,12 +40,12 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     
     try:
         async with driver.session() as session:
-            # Query 1: Attack Co-occurrence Matrix
+            # Query 1: Force Graph Data (API Key -> Attack Type)
             q1 = """
-            MATCH (a1:AttackType)<-[:TRIGGERED]-(k:ApiKey)-[:TRIGGERED]->(a2:AttackType)
-            WHERE a1.name < a2.name
-            RETURN a1.name AS source, a2.name AS target, COUNT(k) AS weight 
-            ORDER BY weight DESC LIMIT 20
+            MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
+            WITH k, a, COUNT(*) as weight
+            RETURN k.key_id AS source, a.name AS target, weight
+            ORDER BY weight DESC LIMIT 50
             """
             result1 = await session.run(q1)
             async for record in result1:
@@ -83,17 +85,18 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "times_seen": record["times_seen"]
                 })
                 
-            # Query 4: Provider Targeting
+            # Query 4: API Key Breakdown
             q4 = """
-            MATCH (k:ApiKey)-[:TARGETS]->(p:Provider)
-            RETURN p.name AS provider, COUNT(k) AS api_keys_targeting 
-            ORDER BY api_keys_targeting DESC
+            MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
+            RETURN k.key_id AS key_id, a.name AS attack_type, COUNT(a) AS attack_count
+            ORDER BY attack_count DESC
             """
             result4 = await session.run(q4)
             async for record in result4:
                 provider_targeting.append({
-                    "provider": record["provider"],
-                    "api_keys_targeting": record["api_keys_targeting"]
+                    "key_id": record["key_id"],
+                    "attack_type": record["attack_type"],
+                    "attack_count": record["attack_count"]
                 })
                 
     except Exception as e:
@@ -103,9 +106,105 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     return {
         "status": "ok",
         "data": {
-            "co_occurrence": co_occurrence,
+            "force_graph": co_occurrence,
             "layer_bypass": layer_bypass,
             "top_replayed": top_replayed,
-            "provider_targeting": provider_targeting
+            "api_key_breakdown": provider_targeting
         }
     }
+
+@router.get("/velocity")
+async def get_threat_velocity(current_user: dict = Depends(validate_user_token)):
+    """
+    Get attacks per minute for the last 60 minutes, split by API Key.
+    Queries MongoDB logs.
+    """
+    logs = mongo.get_logs_collection()
+    now = datetime.now(timezone.utc)
+    sixty_mins_ago = now - timedelta(minutes=60)
+    
+    pipeline = [
+        {"$match": {"user_id": current_user["_id"], "timestamp": {"$gte": sixty_mins_ago}, "safe": False}},
+        {
+            "$group": {
+                "_id": {
+                    "minute": {"$minute": "$timestamp"},
+                    "hour": {"$hour": "$timestamp"},
+                    "day": {"$dayOfMonth": "$timestamp"},
+                    "api_key": "$api_key_id"
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.day": 1, "_id.hour": 1, "_id.minute": 1}}
+    ]
+    
+    velocity_data = []
+    async for doc in logs.aggregate(pipeline):
+        # Format a simple HH:MM string for the frontend
+        time_str = f"{doc['_id']['hour']:02d}:{doc['_id']['minute']:02d}"
+        velocity_data.append({
+            "time": time_str,
+            "api_key": doc["_id"]["api_key"],
+            "count": doc["count"]
+        })
+        
+    return {"status": "ok", "data": velocity_data}
+
+@router.get("/session-chains")
+async def get_session_chains(current_user: dict = Depends(validate_user_token)):
+    """
+    Get top 20 suspicious sessions and their request sequence (attack chains).
+    """
+    logs = mongo.get_logs_collection()
+    
+    # We find sessions that have at least one blocked request, or sort by most requests
+    pipeline = [
+        {"$match": {"user_id": current_user["_id"]}},
+        {
+            "$group": {
+                "_id": "$session_id",
+                "total_requests": {"$sum": 1},
+                "blocked_count": {"$sum": {"$cond": [{"$eq": ["$safe", False]}, 1, 0]}},
+                "max_risk": {"$max": "$risk_score"},
+                "events": {
+                    "$push": {
+                        "safe": "$safe",
+                        "risk_score": "$risk_score",
+                        "attack_type": "$attack_type",
+                        "flagged_layer": "$flagged_layer",
+                        "timestamp": "$timestamp"
+                    }
+                }
+            }
+        },
+        # Calculate threat score: (blocked / total) * max_risk
+        {
+            "$addFields": {
+                "threat_score": {
+                    "$multiply": [
+                        {"$divide": ["$blocked_count", "$total_requests"]},
+                        "$max_risk"
+                    ]
+                }
+            }
+        },
+        {"$sort": {"threat_score": -1}},
+        {"$limit": 20}
+    ]
+    
+    sessions = []
+    async for doc in logs.aggregate(pipeline):
+        # Format timestamps
+        for ev in doc["events"]:
+            ev["timestamp"] = ev["timestamp"].isoformat()
+        sessions.append({
+            "session_id": str(doc["_id"]) if doc["_id"] else "unknown",
+            "total_requests": doc["total_requests"],
+            "blocked_count": doc["blocked_count"],
+            "max_risk": doc["max_risk"],
+            "threat_score": doc["threat_score"],
+            "events": doc["events"]
+        })
+        
+    return {"status": "ok", "data": sessions}

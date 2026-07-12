@@ -45,6 +45,10 @@ async def check_prompt(
     app_ctx = body.app_context if body.app_context != "general" else key_doc.get("app_context", "general")
     canary_token = body.custom_canary or key_doc.get("custom_canary", None)
 
+    # Capture session and client identity (never store raw prompt)
+    session_id = request.headers.get("X-Session-ID") or str(uuid.uuid4())
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+
     # Pre-pipeline check: Graph Replay Cache
     normalized_hash = hash_normalized_prompt(body.prompt)
     raw_hash = hash_prompt(body.prompt)
@@ -117,6 +121,8 @@ async def check_prompt(
         "request_id": result.request_id,
         "api_key_id": str(key_doc["_id"]),
         "user_id": key_doc.get("user_id"),
+        "session_id": session_id,
+        "client_ip": client_ip,
         "timestamp": datetime.now(timezone.utc),
         "prompt_hash": raw_hash,
         "prompt_length": len(body.prompt),
