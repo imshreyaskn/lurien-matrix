@@ -35,8 +35,22 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     
     keys_coll = mongo.get_keys_collection()
     key_names = {}
-    async for key_doc in keys_coll.find():
+    async for key_doc in keys_coll.find({"user_id": current_user["_id"]}):
         key_names[str(key_doc["_id"])] = key_doc.get("name", "Unknown App")
+        
+    allowed_keys = list(key_names.keys())
+    if not allowed_keys:
+        return {
+            "status": "ok",
+            "data": {
+                "force_graph": [],
+                "layer_bypass": [],
+                "top_replayed": [],
+                "api_key_breakdown": [],
+                "flow_data": [],
+                "replay_counts": {}
+            }
+        }
     
     co_occurrence = []
     layer_bypass = []
@@ -50,11 +64,12 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             # Query 1: Force Graph Data (API Key -> Attack Type)
             q1 = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
+            WHERE k.key_id IN $allowed_keys
             WITH k, a, COUNT(*) as weight
             RETURN k.key_id AS source, a.name AS target, weight
             ORDER BY weight DESC LIMIT 50
             """
-            result1 = await session.run(q1)
+            result1 = await session.run(q1, allowed_keys=allowed_keys)
             async for record in result1:
                 source_id = str(record["source"])
                 co_occurrence.append({
@@ -65,13 +80,14 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                 
             # Query 2: Layer Bypass (attacks caught by ML, missing rule/heuristic)
             q2 = """
-            MATCH (a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
-            WITH a, COLLECT(l.name) AS layers
+            MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
+            WHERE k.key_id IN $allowed_keys
+            WITH a, COLLECT(DISTINCT l.name) AS layers
             WHERE 'ml_classifier' IN layers AND NOT 'rule_based' IN layers AND NOT 'heuristic' IN layers
             RETURN a.name AS attack_type, SIZE(layers) AS caught_by_ml_only 
             ORDER BY caught_by_ml_only DESC LIMIT 10
             """
-            result2 = await session.run(q2)
+            result2 = await session.run(q2, allowed_keys=allowed_keys)
             async for record in result2:
                 layer_bypass.append({
                     "attack_type": record["attack_type"],
@@ -80,12 +96,12 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                 
             # Query 3: Top Replayed Hashes
             q3 = """
-            MATCH (h:PromptHash)-[r:IS_ATTACK]->(a:AttackType)
-            WHERE r.times_seen >= 2
-            RETURN h.hash AS hash, a.name AS attack_type, r.times_seen AS times_seen 
+            MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)<-[r:IS_ATTACK]-(h:PromptHash)
+            WHERE k.key_id IN $allowed_keys AND r.times_seen >= 2
+            RETURN DISTINCT h.hash AS hash, a.name AS attack_type, r.times_seen AS times_seen 
             ORDER BY times_seen DESC LIMIT 10
             """
-            result3 = await session.run(q3)
+            result3 = await session.run(q3, allowed_keys=allowed_keys)
             async for record in result3:
                 top_replayed.append({
                     "hash": record["hash"],
@@ -96,10 +112,11 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             # Query 4: API Key Breakdown
             q4 = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
+            WHERE k.key_id IN $allowed_keys
             RETURN k.key_id AS key_id, a.name AS attack_type, COUNT(a) AS attack_count
             ORDER BY attack_count DESC
             """
-            result4 = await session.run(q4)
+            result4 = await session.run(q4, allowed_keys=allowed_keys)
             async for record in result4:
                 key_id = str(record["key_id"])
                 provider_targeting.append({
@@ -111,10 +128,11 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             # Query 5: Three-stage flow (ApiKey -> AttackType -> FlaggedLayer)
             q5 = """
             MATCH (k:ApiKey)-[t:TRIGGERED]->(a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
+            WHERE k.key_id IN $allowed_keys
             RETURN k.key_id AS api_key, a.name AS attack_type, l.name AS flagged_layer, t.count AS weight
             ORDER BY weight DESC LIMIT 100
             """
-            result5 = await session.run(q5)
+            result5 = await session.run(q5, allowed_keys=allowed_keys)
             async for record in result5:
                 kid = str(record["api_key"])
                 flow_data.append({
@@ -126,12 +144,13 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             
             # Query 6: Replay counts per attack type
             q6 = """
-            MATCH (h:PromptHash)-[r:IS_ATTACK]->(a:AttackType)
-            WHERE r.times_seen >= 2
-            WITH a.name AS attack_type, COUNT(h) AS replay_count
+            MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)<-[r:IS_ATTACK]-(h:PromptHash)
+            WHERE k.key_id IN $allowed_keys AND r.times_seen >= 2
+            WITH DISTINCT a.name AS attack_type, h.hash AS h_hash
+            WITH attack_type, COUNT(h_hash) AS replay_count
             RETURN attack_type, replay_count
             """
-            result6 = await session.run(q6)
+            result6 = await session.run(q6, allowed_keys=allowed_keys)
             async for record in result6:
                 replay_counts[record["attack_type"]] = record["replay_count"]
                 
