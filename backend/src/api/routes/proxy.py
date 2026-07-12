@@ -77,7 +77,12 @@ async def proxy_llm_request(
     pipeline = request.app.state.pipeline
     app_ctx = key_doc.get("app_context", "general")
     canary_token = key_doc.get("custom_canary", None)
-    
+
+    # Capture session and client identity (never store raw prompt)
+    import uuid as _uuid
+    session_id = request.headers.get("X-Session-ID") or str(_uuid.uuid4())
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
+
     normalized_hash = hash_normalized_prompt(prompt)
     raw_hash = hash_prompt(prompt)
     graph_replay_hit = False
@@ -150,6 +155,8 @@ async def proxy_llm_request(
     log_entry = {
         "request_id": result.request_id,
         "api_key_id": str(key_doc["_id"]),
+        "session_id": session_id,
+        "client_ip": client_ip,
         "timestamp": datetime.now(timezone.utc),
         "prompt_hash": raw_hash,
         "prompt_length": len(prompt),
