@@ -249,7 +249,7 @@ Benchmarked against the live deployment (Hugging Face Space, CPU-basic tier) usi
 | Median end-to-end latency | **1514 ms** |
 | P95 latency | **1893 ms** |
 
-> **Note on latency:** The figures above are measured end-to-end against a cold-start HF Space instance (CPU-basic free tier) over a transatlantic network connection. The **pipeline-only processing time** (measured server-side) is **8–35 ms** — the remainder is network round-trip and Docker container warm-up. On a warm instance in the same region, total latency is under 100 ms.
+> **Note on latency: The figures above are measured end-to-end against a cold-start HF Space instance (CPU-basic free tier) over a transatlantic network connection. The pipeline-only processing time (measured server-side) is 8–35 ms — the remainder is network round-trip and Docker container warm-up. On a warm instance in the same region, total latency is under 100 ms.**
 
 To reproduce:
 ```bash
@@ -257,6 +257,8 @@ python scripts/benchmark.py --url https://imdrizzle-lurien-matrix-firewall.hf.sp
 ```
 
 ## Live Demo
+
+**Frontend Dashboard:** [https://lurienmatrix.vercel.app/](https://lurienmatrix.vercel.app/)
 
 A fully-populated demo account is available to explore the dashboard without generating your own traffic:
 
