@@ -33,6 +33,11 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     # but in a real multi-tenant scenario, we would link ApiKeys to Users in the graph
     # and filter queries by a User node.
     
+    keys_coll = mongo.get_keys_collection()
+    key_names = {}
+    async for key_doc in keys_coll.find():
+        key_names[str(key_doc["_id"])] = key_doc.get("name", "Unknown App")
+    
     co_occurrence = []
     layer_bypass = []
     top_replayed = []
@@ -49,8 +54,9 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             """
             result1 = await session.run(q1)
             async for record in result1:
+                source_id = str(record["source"])
                 co_occurrence.append({
-                    "source": record["source"],
+                    "source": key_names.get(source_id, source_id),
                     "target": record["target"],
                     "weight": record["weight"]
                 })
@@ -93,8 +99,9 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             """
             result4 = await session.run(q4)
             async for record in result4:
+                key_id = str(record["key_id"])
                 provider_targeting.append({
-                    "key_id": record["key_id"],
+                    "key_id": key_names.get(key_id, key_id),
                     "attack_type": record["attack_type"],
                     "attack_count": record["attack_count"]
                 })
@@ -120,6 +127,11 @@ async def get_threat_velocity(current_user: dict = Depends(validate_user_token))
     Queries MongoDB logs.
     """
     logs = mongo.get_logs_collection()
+    keys_coll = mongo.get_keys_collection()
+    key_names = {}
+    async for key_doc in keys_coll.find():
+        key_names[str(key_doc["_id"])] = key_doc.get("name", "Unknown App")
+
     now = datetime.now(timezone.utc)
     time_window = now - timedelta(hours=24)
     
@@ -141,9 +153,10 @@ async def get_threat_velocity(current_user: dict = Depends(validate_user_token))
     velocity_data = []
     async for doc in logs.aggregate(pipeline):
         time_str = f"{doc['_id']['hour']:02d}:00"
+        key_id = str(doc["_id"]["api_key"])
         velocity_data.append({
             "time": time_str,
-            "api_key": doc["_id"]["api_key"],
+            "api_key": key_names.get(key_id, key_id),
             "count": doc["count"]
         })
         
