@@ -24,13 +24,34 @@ const LAYER_COLORS = {
 function layoutColumn(items, x, totalHeight) {
   const sum = items.reduce((a, b) => a + b.value, 0) || 1;
   const usable = totalHeight - NODE_GAP * (items.length - 1);
+  
+  let heights = items.map(item => Math.max(0, (item.value / sum) * usable));
+  let deficit = 0;
+  for (let i = 0; i < heights.length; i++) {
+    if (heights[i] < NODE_H_MIN) {
+      deficit += NODE_H_MIN - heights[i];
+      heights[i] = NODE_H_MIN;
+    }
+  }
+  
+  let stealable = heights.reduce((acc, val) => acc + (val > NODE_H_MIN ? val - NODE_H_MIN : 0), 0);
+  if (deficit > 0 && stealable > 0) {
+    for (let i = 0; i < heights.length; i++) {
+      if (heights[i] > NODE_H_MIN) {
+        heights[i] -= ((heights[i] - NODE_H_MIN) / stealable) * deficit;
+        heights[i] = Math.max(NODE_H_MIN, heights[i]);
+      }
+    }
+  }
+  
   let y = 0;
-  return items.map(item => {
-    const h = Math.max(NODE_H_MIN, (item.value / sum) * usable);
-    const node = { ...item, x, y, h };
-    y += h + NODE_GAP;
+  const nodes = items.map((item, i) => {
+    const node = { ...item, x, y, h: heights[i] };
+    y += heights[i] + NODE_GAP;
     return node;
   });
+  
+  return nodes;
 }
 
 function ribbonPath(x0, y0Top, y0Bot, x1, y1Top, y1Bot) {
@@ -115,12 +136,19 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
   const layout = useMemo(() => {
     if (!model) return null;
     const { w, h } = size;
-    const innerH = h - 80;
+    
+    // Determine the absolute minimum inner height required so no node is squished
+    const minHKey = Math.max(0, model.keyItems.length * (NODE_H_MIN + NODE_GAP) - NODE_GAP);
+    const minHAttack = Math.max(0, model.attackTypesOrdered.length * (NODE_H_MIN + NODE_GAP) - NODE_GAP);
+    const minHLayer = Math.max(0, model.layerItems.length * (NODE_H_MIN + NODE_GAP) - NODE_GAP);
+    const requiredInnerH = Math.max(h - 80, minHKey, minHAttack, minHLayer);
+    const actualH = Math.max(h, requiredInnerH + 80);
+
     const col1X = 24, col2X = w / 2 - COL_W / 2, col3X = w - COL_W - 24;
 
-    const col1 = layoutColumn(model.keyItems, col1X, innerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
-    const col2 = layoutColumn(model.attackTypesOrdered, col2X, innerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
-    const col3 = layoutColumn(model.layerItems, col3X, innerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
+    const col1 = layoutColumn(model.keyItems, col1X, requiredInnerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
+    const col2 = layoutColumn(model.attackTypesOrdered, col2X, requiredInnerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
+    const col3 = layoutColumn(model.layerItems, col3X, requiredInnerH).map(n => ({ ...n, cy0: n.y + 40, cy1: n.y + n.h + 40 }));
 
     // Running offsets per node so ribbons stack without overlap
     const offset1 = new Map(col1.map(n => [n.id, 0]));
@@ -162,7 +190,7 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
       });
     });
 
-    return { col1, col2, col3, links1, links2 };
+    return { col1, col2, col3, links1, links2, actualH };
   }, [model, size]);
 
   const anyActive = hoverKey || hoverAttack || hoverLayer;
@@ -180,7 +208,7 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
   const totalEvents = model ? [...model.keyTotals.values()].reduce((a, b) => a + b, 0) : 0;
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[560px] bg-[#08090b] rounded-xl overflow-hidden">
+    <div className="relative w-full h-full min-h-[560px] bg-[#08090b] rounded-xl overflow-hidden flex flex-col">
       {/* Hex grid background */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
         <defs>
@@ -199,23 +227,24 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
         <rect width="100%" height="100%" fill="url(#hexgrid)" />
       </svg>
 
-      {(!model || !layout) ? (
-        <div className="absolute inset-0 flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest z-10 pointer-events-none">
-          No flow data available
-        </div>
-      ) : (
-        <>
-          {/* Column headers */}
-          <div className="absolute top-4 left-0 w-full z-10 pointer-events-none">
-            <div className="flex justify-between px-6">
-              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>API Keys</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Attack Types</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Detection Layers</span>
-            </div>
+      {model && layout && (
+        <div className="absolute top-4 left-0 w-full z-20 pointer-events-none">
+          <div className="flex justify-between px-6">
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>API Keys</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Attack Types</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/20" style={{ width: COL_W, textAlign: 'center' }}>Detection Layers</span>
           </div>
+        </div>
+      )}
 
-          {/* Main SVG */}
-          <svg width={size.w} height={size.h} className="relative z-[1]"
+      {/* Scrollable Container for the graph */}
+      <div ref={containerRef} className="relative flex-1 w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar z-[1]">
+        {(!model || !layout) ? (
+          <div className="absolute inset-0 flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest z-10 pointer-events-none">
+            No flow data available
+          </div>
+        ) : (
+          <svg width={size.w} height={layout.actualH} className="relative block"
             onMouseLeave={() => { setHoverKey(null); setHoverAttack(null); setHoverLayer(null); }}
             style={{ pointerEvents: 'all' }}
           >
@@ -346,20 +375,21 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
               );
             })}
           </svg>
+        )}
+      </div>
 
-          {/* Footer legend */}
-          <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none">
-            <span className="font-mono text-[9px] uppercase tracking-widest text-white/25">
-              Ribbon width = event volume · ×N = replayed payload hashes · hover to trace full chain
-            </span>
-            <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
-              <span>{model.keyItems.length} keys</span>
-              <span>{model.attackTypesOrdered.length} attacks</span>
-              <span>{model.layerItems.length} layers</span>
-              <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
-            </div>
+      {model && layout && (
+        <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between pointer-events-none z-20">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-white/25">
+            Ribbon width = event volume · ×N = replayed payload hashes · hover to trace full chain
+          </span>
+          <div className="flex gap-4 font-mono text-[10px] uppercase tracking-widest text-white/40">
+            <span>{model.keyItems.length} keys</span>
+            <span>{model.attackTypesOrdered.length} attacks</span>
+            <span>{model.layerItems.length} layers</span>
+            <span className="text-white/60">{totalEvents.toLocaleString()} events</span>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
