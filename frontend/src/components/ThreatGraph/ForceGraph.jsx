@@ -1,103 +1,189 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { formatAttackType, getAttackColor } from '../../utils/formatters';
 
 export default function ThreatForceGraph({ data }) {
   const containerRef = useRef(null);
   const fgRef = useRef(null);
+  
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [highlightNodes, setHighlightNodes] = useState(new Set());
+  const [highlightLinks, setHighlightLinks] = useState(new Set());
+
+  // Handle Resize
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const { nodes, links } = useMemo(() => {
+    if (!data || data.length === 0) return { nodes: [], links: [] };
+
+    const nodeMap = new Map();
+    const linkList = [];
+
+    // First pass: collect attack types so we can anchor them radially
+    const attackTypes = [...new Set(data.map(d => d.target))];
+    const centerX = 0, centerY = 0;
+    const radius = 180;
+
+    attackTypes.forEach((type, i) => {
+      const angle = (i / attackTypes.length) * 2 * Math.PI - Math.PI / 2;
+      nodeMap.set(type, {
+        id: type,
+        group: 'attack_type',
+        val: 0,
+        fx: centerX + radius * Math.cos(angle),
+        fy: centerY + radius * Math.sin(angle),
+      });
+    });
+
+    data.forEach(d => {
+      if (!nodeMap.has(d.source)) {
+        nodeMap.set(d.source, { id: d.source, group: 'api_key', val: d.weight });
+      } else {
+        nodeMap.get(d.source).val += d.weight;
+      }
+      nodeMap.get(d.target).val += d.weight;
+
+      linkList.push({ source: d.source, target: d.target, value: d.weight });
+    });
+
+    return { nodes: [...nodeMap.values()], links: linkList };
+  }, [data]);
 
   useEffect(() => {
-    if (fgRef.current) {
-      // Increase repulsion to spread nodes out
-      fgRef.current.d3Force('charge').strength(-300);
-      fgRef.current.d3Force('link').distance(70);
+    if (!fgRef.current) return;
+    fgRef.current.d3Force('charge').strength(node => (node.group === 'attack_type' ? -100 : -250));
+    fgRef.current.d3Force('link').distance(70).strength(1);
+    fgRef.current.d3Force('center', null);
+  }, [nodes]);
+
+  const handleNodeHover = node => {
+    highlightNodes.clear();
+    highlightLinks.clear();
+    
+    if (node) {
+      highlightNodes.add(node.id);
+      links.forEach(l => {
+        if (l.source.id === node.id || l.target.id === node.id) {
+          highlightLinks.add(l);
+          highlightNodes.add(l.source.id);
+          highlightNodes.add(l.target.id);
+        }
+      });
     }
-  }, [data]);
+    
+    setHighlightNodes(new Set(highlightNodes));
+    setHighlightLinks(new Set(highlightLinks));
+  };
+
+  const handleLinkHover = link => {
+    highlightNodes.clear();
+    highlightLinks.clear();
+    
+    if (link) {
+      highlightLinks.add(link);
+      highlightNodes.add(link.source.id);
+      highlightNodes.add(link.target.id);
+    }
+    
+    setHighlightNodes(new Set(highlightNodes));
+    setHighlightLinks(new Set(highlightLinks));
+  };
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-[400px] flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest border border-white/5 rounded-xl bg-luma-100">
+      <div className="h-full min-h-[400px] flex items-center justify-center text-luma-600 font-mono text-sm uppercase tracking-widest border border-white/5 rounded-xl bg-luma-100">
         No coordination data available
       </div>
     );
   }
 
-  // Transform matrix rows (source, target, weight) into nodes and links
-  const nodes = [];
-  const links = [];
-  const nodeMap = new Set();
-
-  data.forEach(d => {
-    // API Key node
-    if (!nodeMap.has(d.source)) {
-      nodes.push({ id: d.source, group: 'api_key', val: 1 });
-      nodeMap.add(d.source);
-    } else {
-      nodes.find(n => n.id === d.source).val += d.weight;
-    }
-
-    // Attack Type node
-    if (!nodeMap.has(d.target)) {
-      nodes.push({ id: d.target, group: 'attack_type', val: 1 });
-      nodeMap.add(d.target);
-    } else {
-      nodes.find(n => n.id === d.target).val += d.weight;
-    }
-
-    links.push({
-      source: d.source,
-      target: d.target,
-      value: d.weight
-    });
-  });
-
   return (
-    <div ref={containerRef} className="h-[400px] w-full bg-luma-100 border border-white/5 rounded-xl overflow-hidden cursor-crosshair">
+    <div ref={containerRef} className="absolute inset-0 w-full h-full bg-luma-100 rounded-xl overflow-hidden cursor-crosshair">
       <ForceGraph2D
         ref={fgRef}
-        width={containerRef.current?.clientWidth || 600}
-        height={400}
+        width={dimensions.width}
+        height={dimensions.height}
         graphData={{ nodes, links }}
-        nodeAutoColorBy="group"
-        nodeRelSize={6}
-        linkColor={() => 'rgba(255,255,255,0.1)'}
-        linkWidth={link => Math.min(link.value, 10)}
+        cooldownTicks={100}
+        onNodeHover={handleNodeHover}
+        onLinkHover={handleLinkHover}
+        linkColor={link => 
+          highlightLinks.has(link) 
+            ? 'rgba(255,255,255,0.6)' 
+            : (highlightNodes.size > 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.12)')
+        }
+        linkWidth={link => Math.min(link.value, 8)}
+        linkDirectionalArrowLength={3.5}
+        linkDirectionalArrowRelPos={1}
+        linkCurvature={0.15}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.group === 'api_key' ? node.id.substring(0, 8) : formatAttackType(node.id);
-          const fontSize = 12/globalScale;
+          const isHub = node.group === 'attack_type';
+          const label = isHub ? formatAttackType(node.id) : node.id.substring(0, 8);
+          const fontSize = (isHub ? 13 : 11) / globalScale;
           
-          if (node.group === 'attack_type') {
-            ctx.fillStyle = getAttackColor(node.id);
-          } else {
-            ctx.fillStyle = '#6B7280'; // API keys are gray
-          }
-          
-          const radius = Math.sqrt(node.val) * 2 + 6;
+          // Hover dimming
+          const isHighlighted = highlightNodes.has(node.id);
+          const dimOpacity = (highlightNodes.size > 0 && !isHighlighted) ? 0.2 : 1;
+
+          ctx.globalAlpha = dimOpacity;
+
+          ctx.fillStyle = isHub ? getAttackColor(node.id) : '#6B7280';
+          const radius = isHub ? 14 : Math.sqrt(node.val) * 1.5 + 4;
+
           ctx.beginPath();
           ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
           ctx.fill();
-          
-          // Draw a subtle border around nodes
-          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-          ctx.lineWidth = 1.5;
+
+          ctx.strokeStyle = isHub ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)';
+          ctx.lineWidth = isHub ? 2 : 1;
           ctx.stroke();
 
-          // Text pill background
-          ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+          ctx.font = `${isHub ? 'bold ' : ''}${fontSize}px "JetBrains Mono", monospace`;
           const textWidth = ctx.measureText(label).width;
           const bgWidth = textWidth + 8;
           const bgHeight = fontSize + 4;
-          
-          ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
-          ctx.fillRect(node.x - bgWidth/2, node.y + radius + 4, bgWidth, bgHeight);
 
-          // Text label
+          ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+          ctx.fillRect(node.x - bgWidth / 2, node.y + radius + 4, bgWidth, bgHeight);
+
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = node.group === 'api_key' ? '#9CA3AF' : '#E5E7EB';
-          ctx.fillText(label, node.x, node.y + radius + 4 + (bgHeight/2));
+          ctx.fillStyle = isHub ? '#E5E7EB' : '#9CA3AF';
+          ctx.fillText(label, node.x, node.y + radius + 4 + bgHeight / 2);
+          
+          ctx.globalAlpha = 1;
         }}
       />
+      
+      {/* Legends */}
+      <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+        <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#6B7280] mr-2"></span>
+          API Keys (Size = Traffic)
+        </div>
+        <div className="text-[10px] font-mono text-luma-400 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+          <span className="inline-block w-2 h-2 rounded-full bg-white mr-2"></span>
+          Hubs = Attack Types
+        </div>
+      </div>
+      
+      <div className="absolute bottom-4 left-4 pointer-events-none">
+        <div className="text-[10px] font-mono text-luma-500 uppercase tracking-widest bg-black/60 px-2 py-1 rounded border border-white/5">
+          Edge thickness = Event frequency • Hover to isolate
+        </div>
+      </div>
     </div>
   );
 }
