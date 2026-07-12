@@ -12,29 +12,41 @@ Lurien Matrix utilizes a six-layer defense pipeline, engineered to provide compr
 
 ```mermaid
 flowchart LR
-    Client(["Client App"])
+    User(["End User"])
+    
+    subgraph ClientApps["Client Applications"]
+        direction TB
+        App1["HR Bot (API Key A)"]
+        App2["Coding Assistant (API Key B)"]
+    end
+    
+    User -->|"Sends Prompt"| ClientApps
+    
     subgraph Firewall["Lurien Matrix Firewall"]
         direction TB
-        L1["① Canary Token Detector\nCryptographic leak detection"]
-        L2["② Rule-Based Engine\nRegex & pattern matching"]
-        L3["③ Heuristic Analysis\nEntropy & density scoring"]
-        L4["④ Embedding Similarity\nFAISS nearest-neighbor search"]
-        L5["⑤ ML Classifier\nDistilBERT ONNX inference"]
-        L6["⑥ Context Policy\nIntent scope validation"]
+        L1["① Canary Token Detector"]
+        L2["② Rule-Based Engine"]
+        L3["③ Heuristic Analysis"]
+        L4["④ Embedding Similarity"]
+        L5["⑤ ML Classifier"]
+        L6["⑥ Context Policy"]
         L1 --> L2 --> L3 --> L4 --> L5 --> L6
     end
-    LLM(["LLM Provider\nOpenAI / Gemini / Claude / Groq"])
+    
+    ClientApps -->|"API Request"| L1
+    
+    LLM(["LLM Provider\n(OpenAI, Claude, etc.)"])
     Block(["403 Blocked\nThreat Report"])
 
-    Client --> L1
     L6 -->|"SAFE"| LLM
-    LLM -->|"Response"| Client
-    L1 -->|"THREAT"| Block
-    L2 -->|"THREAT"| Block
-    L3 -->|"THREAT"| Block
-    L4 -->|"THREAT"| Block
-    L5 -->|"THREAT"| Block
-    L6 -->|"THREAT"| Block
+    LLM -.->|"Response"| ClientApps
+    
+    L1 -->|"Data Exfiltration"| Block
+    L2 -->|"Direct Injection"| Block
+    L3 -->|"Obfuscation / Anomalies"| Block
+    L4 -->|"Known Attack Vectors"| Block
+    L5 -->|"Complex Injections"| Block
+    L6 -->|"Persona Hijacking"| Block
 ```
 
 1. **Canary Token Detector**
