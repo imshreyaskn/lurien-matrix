@@ -53,14 +53,28 @@ export default function ThreatFlowDiagram({ data, replayCounts = {} }) {
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
-    const update = () => {
-      setSize({ w: containerRef.current.clientWidth, h: Math.max(480, containerRef.current.clientHeight) });
-    };
-    const ro = new ResizeObserver(update);
-    ro.observe(containerRef.current);
-    update();
-    const t = setTimeout(update, 100);
-    return () => { ro.disconnect(); clearTimeout(t); };
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setSize({ 
+            w: entry.contentRect.width, 
+            h: Math.max(480, entry.contentRect.height) 
+          });
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    
+    // Initial size
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width > 0) {
+      setSize({
+        w: rect.width,
+        h: Math.max(480, rect.height)
+      });
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   const model = useMemo(() => {
