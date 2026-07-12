@@ -62,12 +62,12 @@ export default function ThreatGraph() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Left Column: Graph and Velocity (8 cols) */}
-        <div className="xl:col-span-8 flex flex-col gap-6">
+        {/* Left Column: Graph and Velocity (9 cols) */}
+        <div className="xl:col-span-9 flex flex-col gap-6">
           
           {/* Main Visual: Force Graph */}
           {!isOffline && (
-            <div className="relative flex-1 flex flex-col min-h-[600px] w-full">
+            <div className="relative flex-1 flex flex-col min-h-[600px] xl:min-h-[calc(100vh-400px)] w-full">
               <h2 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-6 flex items-center gap-2 px-6 pt-6">
                 <Network className="w-4 h-4 text-accent-gold" />
                 Coordination Intelligence (Key → Attack)
@@ -87,8 +87,8 @@ export default function ThreatGraph() {
 
         </div>
 
-        {/* Right Column: History and Tables (4 cols) */}
-        <div className="xl:col-span-4 flex flex-col gap-6">
+        {/* Right Column: History and Tables (3 cols) */}
+        <div className="xl:col-span-3 flex flex-col gap-6">
           
           {/* Session Chains */}
           <div className="bg-luma-100 border border-white/5 rounded-xl p-6 flex flex-col max-h-[400px]">
