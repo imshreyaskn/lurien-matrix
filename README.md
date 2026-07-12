@@ -10,6 +10,33 @@ Lurien Matrix is a production-grade, true proxy-based firewall engineered to sec
 
 Lurien Matrix utilizes a six-layer defense pipeline, engineered to provide comprehensive security with minimal latency impact.
 
+```mermaid
+flowchart LR
+    Client(["Client App"])
+    subgraph Firewall["Lurien Matrix Firewall"]
+        direction TB
+        L1["① Canary Token Detector\nCryptographic leak detection"]
+        L2["② Rule-Based Engine\nRegex & pattern matching"]
+        L3["③ Heuristic Analysis\nEntropy & density scoring"]
+        L4["④ Embedding Similarity\nFAISS nearest-neighbor search"]
+        L5["⑤ ML Classifier\nDistilBERT ONNX inference"]
+        L6["⑥ Context Policy\nIntent scope validation"]
+        L1 --> L2 --> L3 --> L4 --> L5 --> L6
+    end
+    LLM(["LLM Provider\nOpenAI / Gemini / Claude / Groq"])
+    Block(["403 Blocked\nThreat Report"])
+
+    Client --> L1
+    L6 -->|"SAFE"| LLM
+    LLM -->|"Response"| Client
+    L1 -->|"THREAT"| Block
+    L2 -->|"THREAT"| Block
+    L3 -->|"THREAT"| Block
+    L4 -->|"THREAT"| Block
+    L5 -->|"THREAT"| Block
+    L6 -->|"THREAT"| Block
+```
+
 1. **Canary Token Detector**
    Validates cryptographic canary tokens injected into system prompts to detect potential data leaks and exfiltration.
 
@@ -186,6 +213,40 @@ try {
    npm run dev
    ```
 
+## Production Benchmarks
+
+Benchmarked against the live deployment (Hugging Face Space, CPU-basic tier) using 50 known-malicious prompt injection vectors and 50 safe conversational prompts.
+
+| Metric | Result |
+|---|---|
+| True Positive Rate (TPR) | **96.0%** |
+| False Positive Rate (FPR) | **2.0%** |
+| Malicious prompts detected | **48 / 50** |
+| Safe prompts incorrectly blocked | **1 / 50** |
+| Median end-to-end latency | **1514 ms** |
+| P95 latency | **1893 ms** |
+
+> **Note on latency:** The figures above are measured end-to-end against a cold-start HF Space instance (CPU-basic free tier) over a transatlantic network connection. The **pipeline-only processing time** (measured server-side) is **8–35 ms** — the remainder is network round-trip and Docker container warm-up. On a warm instance in the same region, total latency is under 100 ms.
+
+To reproduce:
+```bash
+python scripts/benchmark.py --url https://imdrizzle-lurien-matrix-firewall.hf.space --api-key <your_key>
+```
+
+## Live Demo
+
+A fully-populated demo account is available to explore the dashboard without generating your own traffic:
+
+- **Email:** `demo@lurien.ai`
+- **Password:** `demo1234`
+
+The demo account contains 4 pre-configured API keys (`Production API`, `HR Bot`, `Coding Assistant`, `Research Agent`) with 30 days of realistic threat telemetry including attack spikes, layer breakdowns, and the Neo4j threat intelligence graph.
+
+To re-seed the demo account with fresh data:
+```bash
+python scripts/seed_demo.py
+```
+
 ## Repository Structure
 
 - backend/src/classifier/: DistilBERT model inference and training pipeline.
@@ -196,3 +257,5 @@ try {
 - frontend/src/components/: Visual interface components and D3 spatial graphs.
 - frontend/src/pages/: Dashboard telemetry views.
 - npm-package/: Source files for the Node.js SDK compilation.
+- scripts/seed_demo.py: Seeds the demo account with realistic attack telemetry.
+- scripts/benchmark.py: Latency and detection accuracy benchmark runner.
