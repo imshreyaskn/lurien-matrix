@@ -96,26 +96,46 @@ async def enqueue_write(func, *args, **kwargs) -> bool:
 
 
 async def _writer_worker():
-    """Background task that drains the write queue sequentially."""
+    """Background task that drains the write queue in batches."""
     logger.info("Neo4j background writer started")
+    from src.db.graph_writer import write_threat_events_batch
+    
     while True:
         if _write_queue is None:
             break
             
         try:
-            # Wait for a task to arrive
-            func, args, kwargs = await _write_queue.get()
-            try:
-                await func(*args, **kwargs)
-            except Exception as e:
-                logger.error(f"Background Neo4j write failed: {e}")
-            finally:
-                _write_queue.task_done()
+            # Wait for at least one item
+            item = await _write_queue.get()
+            batch = [item]
+            _write_queue.task_done()
+            
+            # Drain up to 100 items per batch
+            while len(batch) < 100:
+                try:
+                    next_item = _write_queue.get_nowait()
+                    batch.append(next_item)
+                    _write_queue.task_done()
+                except asyncio.QueueEmpty:
+                    break
+                    
+            if batch:
+                try:
+                    events_data = []
+                    for func, args, kwargs in batch:
+                        events_data.append({
+                            "log_entry": args[0],
+                            "normalized_hash": args[1]
+                        })
+                    await write_threat_events_batch(events_data)
+                except Exception as e:
+                    logger.error(f"Background Neo4j batch write failed: {e}")
         except asyncio.CancelledError:
             break
         except Exception as e:
             logger.error(f"Neo4j worker error: {e}")
             await asyncio.sleep(1)
+
 
 
 async def disconnect() -> None:
@@ -140,11 +160,5 @@ async def disconnect() -> None:
 
 
 async def is_connected() -> bool:
-    """Check if Neo4j is reachable."""
-    if _driver is None:
-        return False
-    try:
-        await _driver.verify_connectivity()
-        return True
-    except Exception:
-        return False
+    """Check if Neo4j driver is configured (passive check)."""
+    return _driver is not None

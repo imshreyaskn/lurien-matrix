@@ -144,7 +144,10 @@ async def check_prompt(
 
     # Update key usage stats
     try:
-        update = {"$inc": {"total_checks": 1, "monthly_usage": 1}}
+        update = {
+            "$inc": {"total_checks": 1, "monthly_usage": 1},
+            "$set": {"last_used_at": datetime.now(timezone.utc)}
+        }
         if not result.safe:
             update["$inc"]["total_blocked"] = 1
         await mongo.get_keys_collection().update_one(
@@ -175,6 +178,12 @@ async def check_batch(
     app_ctx = key_doc.get("app_context", "general")
     canary_token = key_doc.get("custom_canary", None)
 
+    import asyncio
+
+    # Prepare concurrent tasks
+    classification_tasks = []
+    valid_prompts = []
+    
     for prompt in body.prompts:
         if not prompt or not prompt.strip():
             # Return error result for empty prompts
@@ -203,43 +212,52 @@ async def check_batch(
             })
             continue
 
-        result = await run_in_threadpool(
+        valid_prompts.append(prompt)
+        task = run_in_threadpool(
             pipeline.classify,
             text=prompt,
             app_context=app_ctx,
             custom_canary=canary_token,
             use_openai_moderation=key_doc.get("use_openai_moderation", False)
         )
-        results.append(result.to_dict())
+        classification_tasks.append(task)
+        
+    # Execute valid prompts concurrently
+    if classification_tasks:
+        classification_results = await asyncio.gather(*classification_tasks)
+        
+        for idx, result in enumerate(classification_results):
+            prompt = valid_prompts[idx]
+            results.append(result.to_dict())
 
-        # Log each result
-        try:
-            log_entry = {
-                "request_id": result.request_id,
-                "api_key_id": str(key_doc["_id"]),
-                "user_id": key_doc.get("user_id"),
-                "timestamp": datetime.now(timezone.utc),
-                "prompt_hash": hash_prompt(prompt),
-                "prompt_length": len(prompt),
-                "safe": result.safe,
-                "risk_score": result.risk_score,
-                "attack_type": result.attack_type,
-                "confidence": result.confidence,
-                "flagged_layer": result.flagged_layer,
-                "flagged_pattern": result.flagged_pattern,
-                "provider": None,
-                "model": None,
-                "blocked": not result.safe,
-                "layers": result.layers,
-                "processing_time_ms": result.processing_time_ms,
-                "model_version": result.model_version,
-                "metadata": {},
-            }
-            await mongo.get_logs_collection().insert_one(log_entry)
-            if not result.safe:
-                await enqueue_write(write_threat_event, log_entry, hash_normalized_prompt(prompt))
-        except Exception as e:
-            logger.error(f"Failed to log batch result: {e}")
+            # Log each result
+            try:
+                log_entry = {
+                    "request_id": result.request_id,
+                    "api_key_id": str(key_doc["_id"]),
+                    "user_id": key_doc.get("user_id"),
+                    "timestamp": datetime.now(timezone.utc),
+                    "prompt_hash": hash_prompt(prompt),
+                    "prompt_length": len(prompt),
+                    "safe": result.safe,
+                    "risk_score": result.risk_score,
+                    "attack_type": result.attack_type,
+                    "confidence": result.confidence,
+                    "flagged_layer": result.flagged_layer,
+                    "flagged_pattern": result.flagged_pattern,
+                    "provider": None,
+                    "model": None,
+                    "blocked": not result.safe,
+                    "layers": result.layers,
+                    "processing_time_ms": result.processing_time_ms,
+                    "model_version": result.model_version,
+                    "metadata": {},
+                }
+                await mongo.get_logs_collection().insert_one(log_entry)
+                if not result.safe:
+                    await enqueue_write(write_threat_event, log_entry, hash_normalized_prompt(prompt))
+            except Exception as e:
+                logger.error(f"Failed to log batch result: {e}")
 
     # Set batch aggregate response headers
     overall_safe = all(res["safe"] for res in results)
