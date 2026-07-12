@@ -21,12 +21,12 @@ export default function VelocityChart({ data }) {
     <div className="bg-luma-100 border border-white/5 rounded-xl p-6 h-[300px] flex flex-col">
       <h2 className="text-xs font-bold text-luma-700 tracking-widest uppercase mb-4 flex items-center gap-2">
         <Activity className="w-4 h-4 text-accent-gold" />
-        Threat Velocity (Last 60 Min)
+        Threat Velocity (Last 24 Hours)
       </h2>
       
       {chartData.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-luma-600 font-mono text-sm uppercase">
-          No attacks detected in the last hour
+          No attacks detected in the last 24 hours
         </div>
       ) : (
         <div className="flex-1">
