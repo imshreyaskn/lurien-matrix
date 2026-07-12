@@ -42,6 +42,8 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     layer_bypass = []
     top_replayed = []
     provider_targeting = []
+    flow_data = []
+    replay_counts = {}
     
     try:
         async with driver.session() as session:
@@ -105,6 +107,33 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "attack_type": record["attack_type"],
                     "attack_count": record["attack_count"]
                 })
+
+            # Query 5: Three-stage flow (ApiKey -> AttackType -> FlaggedLayer)
+            q5 = """
+            MATCH (k:ApiKey)-[t:TRIGGERED]->(a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
+            RETURN k.key_id AS api_key, a.name AS attack_type, l.name AS flagged_layer, t.count AS weight
+            ORDER BY weight DESC LIMIT 100
+            """
+            result5 = await session.run(q5)
+            async for record in result5:
+                kid = str(record["api_key"])
+                flow_data.append({
+                    "apiKey": key_names.get(kid, kid),
+                    "attackType": record["attack_type"],
+                    "flaggedLayer": record["flagged_layer"],
+                    "weight": record["weight"] or 1
+                })
+            
+            # Query 6: Replay counts per attack type
+            q6 = """
+            MATCH (h:PromptHash)-[r:IS_ATTACK]->(a:AttackType)
+            WHERE r.times_seen >= 2
+            WITH a.name AS attack_type, COUNT(h) AS replay_count
+            RETURN attack_type, replay_count
+            """
+            result6 = await session.run(q6)
+            async for record in result6:
+                replay_counts[record["attack_type"]] = record["replay_count"]
                 
     except Exception as e:
         logger.error(f"Failed to query Threat Graph stats: {e}")
@@ -116,7 +145,9 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             "force_graph": co_occurrence,
             "layer_bypass": layer_bypass,
             "top_replayed": top_replayed,
-            "api_key_breakdown": provider_targeting
+            "api_key_breakdown": provider_targeting,
+            "flow_data": flow_data,
+            "replay_counts": replay_counts
         }
     }
 

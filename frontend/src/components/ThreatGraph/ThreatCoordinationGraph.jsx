@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import MatrixView from './MatrixView';
 import NetworkView from './NetworkView';
-import ErrorBoundary from '../Layout/ErrorBoundary';
+import ThreatFlowDiagram from './ThreatFlowDiagram';
+import ErrorBoundary from '../ErrorBoundary';
 
-export default function ThreatCoordinationGraph({ data }) {
-  const [view, setView] = useState('matrix');
+export default function ThreatCoordinationGraph({ data, flowData, replayCounts }) {
+  const [view, setView] = useState('pipeline');
   return (
     <div className="w-full h-full flex flex-col gap-2 relative">
-      <div className="absolute top-0 right-4 z-20 flex justify-end">
-        <div className="flex items-center gap-1 bg-black/30 rounded-lg p-0.5 border border-white/5 backdrop-blur-sm">
-          {['matrix', 'network'].map(v => (
+      <div className="absolute top-3 right-4 z-20 flex justify-end">
+        <div className="flex items-center gap-1 bg-black/40 rounded-lg p-0.5 border border-white/10 backdrop-blur-sm">
+          {['pipeline', 'matrix', 'network'].map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -24,7 +25,13 @@ export default function ThreatCoordinationGraph({ data }) {
       </div>
       <div className="flex-1 w-full h-full relative">
         <ErrorBoundary>
-          {view === 'matrix' ? <MatrixView data={data} /> : <NetworkView data={data} />}
+          {view === 'pipeline' ? (
+            <ThreatFlowDiagram data={flowData} replayCounts={replayCounts} />
+          ) : view === 'matrix' ? (
+            <MatrixView data={data} />
+          ) : (
+            <NetworkView data={data} />
+          )}
         </ErrorBoundary>
       </div>
     </div>
