@@ -7,7 +7,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 
 // Subcomponents
 import VelocityChart from '../components/ThreatGraph/VelocityChart';
-import ThreatForceGraph from '../components/ThreatGraph/ForceGraph';
+import ThreatCoordinationGraph from '../components/ThreatGraph/ThreatCoordinationGraph';
 import SessionDrawer from '../components/ThreatGraph/SessionDrawer';
 
 export default function ThreatGraph() {
@@ -74,7 +74,7 @@ export default function ThreatGraph() {
               </h2>
               <div className="flex-1 w-full relative">
                 <ErrorBoundary>
-                  <ThreatForceGraph data={data.force_graph} />
+                  <ThreatCoordinationGraph data={data.force_graph} />
                 </ErrorBoundary>
               </div>
             </div>
