@@ -102,23 +102,25 @@ export function formatAttackType(type) {
     return "Canary Leak";
   }
 
-  const map = {
-    role_override: 'Role Override',
-    goal_hijacking: 'Goal Hijacking',
-    context_poisoning: 'Context Poisoning',
-    tool_manipulation: 'Tool Manipulation',
-    cascading_amplification: 'Cascading Amplification',
-    heuristic_composite: 'Heuristic Detection',
-    prompt_extraction: 'Prompt Extraction',
-    jailbreak_paraphrase: 'Jailbreak Paraphrase',
-    out_of_scope: 'Out of Scope',
-    DIRECT_INJECTION: 'Direct Injection',
-    PERSONA_HIJACKING: 'Persona Hijacking',
-    SYSTEM_OVERRIDE: 'System Override',
-    ENCODING_ATTACKS: 'Encoding Attack',
-    MANY_SHOT: 'Many-Shot',
-  };
-  return map[type] || type || '—';
+    const map = {
+      role_override: 'Role Override',
+      goal_hijacking: 'Goal Hijacking',
+      context_poisoning: 'Context Poisoning',
+      tool_manipulation: 'Tool Manipulation',
+      cascading_amplification: 'Cascading Amplification',
+      heuristic_composite: 'Heuristic Detection',
+      prompt_extraction: 'Prompt Extraction',
+      jailbreak_paraphrase: 'Jailbreak Paraphrase',
+      out_of_scope: 'Out of Scope',
+      direct_injection: 'Direct Injection',
+      persona_hijacking: 'Persona Hijacking',
+      system_override: 'System Override',
+      encoding_attacks: 'Encoding Attack',
+      many_shot: 'Many-Shot',
+      injection: 'Injection',
+      cumulative_risk_exceeded: 'Cumulative Risk Exceeded',
+    };
+    return map[type.toLowerCase()] || type || '—';
 }
 
 import { THREAT } from './theme';
@@ -141,13 +143,15 @@ export function getAttackColor(type) {
     prompt_extraction: THREAT.purple,
     jailbreak_paraphrase: THREAT.blue,
     out_of_scope: THREAT.green,
-    DIRECT_INJECTION: THREAT.red,
-    PERSONA_HIJACKING: THREAT.amber,
-    SYSTEM_OVERRIDE: THREAT.purple,
-    ENCODING_ATTACKS: THREAT.blue,
-    MANY_SHOT: THREAT.red,
+    direct_injection: THREAT.red,
+    persona_hijacking: THREAT.amber,
+    system_override: THREAT.purple,
+    encoding_attacks: THREAT.blue,
+    many_shot: THREAT.red,
+    injection: THREAT.red,
+    cumulative_risk_exceeded: THREAT.amber,
   };
-  return map[type] || THREAT.muted;
+  return map[type.toLowerCase()] || THREAT.muted;
 }
 
 /**

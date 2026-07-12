@@ -61,9 +61,14 @@ async def write_threat_events_batch(events_data: list) -> None:
         if hasattr(timestamp, "isoformat"):
             timestamp = timestamp.isoformat()
 
+        raw_attack = log_entry.get("attack_type") or "unknown_attack"
+        if raw_attack.lower() == "safe":
+            raw_attack = "cumulative_risk_exceeded"
+        normalized_attack = raw_attack.lower().replace(" ", "_")
+
         formatted_events.append({
             "key_id": str(log_entry.get("api_key_id", "unknown")),
-            "attack_type": log_entry.get("attack_type") or "unknown_attack",
+            "attack_type": normalized_attack,
             "flagged_layer": log_entry.get("flagged_layer") or "unknown_layer",
             "flagged_pattern": str(log_entry.get("flagged_pattern") or "none"),
             "prompt_hash": log_entry.get("prompt_hash", "unknown_hash"),

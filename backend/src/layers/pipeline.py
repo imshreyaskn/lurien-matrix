@@ -182,7 +182,7 @@ class ClassifierPipeline:
             return build_short_circuit(
                 flagged_name="rule_based",
                 risk=current_risk,
-                attack=rule_res.attack_category,
+                attack=rule_res.attack_category.lower().replace(" ", "_") if rule_res.attack_category else "unknown_rule",
                 pattern=rule_res.matched_pattern,
                 running_layers=layers_data
             )
@@ -263,10 +263,13 @@ class ClassifierPipeline:
             layers_data["ml_classifier"]["reason"] = ml_res.reason
 
         if is_ml_triggered and ml_res.ran:
+            attack_class = ml_res.attack_class or "unknown"
+            if attack_class.lower() == "safe":
+                attack_class = "cumulative_risk_exceeded"
             return build_short_circuit(
                 flagged_name="ml_classifier",
                 risk=current_risk,
-                attack=ml_res.attack_class,
+                attack=attack_class.lower().replace(" ", "_"),
                 pattern=f"ML classified threat: {ml_res.attack_class} (cumulative)",
                 running_layers=layers_data
             )
