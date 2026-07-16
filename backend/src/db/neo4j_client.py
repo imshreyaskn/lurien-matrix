@@ -16,6 +16,7 @@ logger = logging.getLogger("llm_firewall.db.neo4j")
 _driver: Optional[AsyncDriver] = None
 _write_queue: Optional[asyncio.Queue] = None
 _worker_task: Optional[asyncio.Task] = None
+_keep_alive_task: Optional[asyncio.Task] = None
 
 # Max queued writes before we start dropping them (load shedding)
 MAX_QUEUE_SIZE = 500
@@ -43,6 +44,7 @@ async def connect(uri: str, user: str, password: str) -> None:
         # Initialize the bounded write queue and worker task
         _write_queue = asyncio.Queue(maxsize=MAX_QUEUE_SIZE)
         _worker_task = asyncio.create_task(_writer_worker())
+        _keep_alive_task = asyncio.create_task(_keep_alive_worker())
         
         logger.info("Connected to Neo4j (Threat Graph active)")
     except Exception as e:
@@ -138,6 +140,26 @@ async def _writer_worker():
 
 
 
+async def _keep_alive_worker():
+    """Background task that pings Neo4j every 12 hours to prevent AuraDB 72-hour inactivity shutdown."""
+    logger.info("Neo4j keep-alive worker started")
+    while True:
+        try:
+            # Wait for 12 hours (12 * 3600 seconds)
+            await asyncio.sleep(43200)
+            
+            if _driver:
+                async with _driver.session() as session:
+                    result = await session.run("RETURN 'ping' AS message")
+                    record = await result.single()
+                    if record and record["message"] == "ping":
+                        logger.info("Keep-alive ping to Neo4j successful.")
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"Neo4j keep-alive worker error: {e}")
+            await asyncio.sleep(60) # Wait a minute before retrying on error
+
 async def disconnect() -> None:
     """Stop the worker and close the Neo4j connection."""
     global _driver, _write_queue, _worker_task
@@ -150,6 +172,14 @@ async def disconnect() -> None:
         except asyncio.CancelledError:
             pass
         _worker_task = None
+        
+    if _keep_alive_task:
+        _keep_alive_task.cancel()
+        try:
+            await _keep_alive_task
+        except asyncio.CancelledError:
+            pass
+        _keep_alive_task = None
         
     _write_queue = None
 

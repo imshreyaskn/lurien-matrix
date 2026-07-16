@@ -29,9 +29,10 @@ export default function LiveMonitor() {
 
   const logs = logsData?.logs || [];
   
-  const activeLayersCount = stats?.layer_effectiveness
-    ? Object.values(stats.layer_effectiveness).filter(v => v > 0).length
-    : 0;
+  // Calculate active layers based on the most recent payload rather than historical effectiveness
+  const activeLayersCount = logs.length > 0 && logs[0].layers
+    ? Object.values(logs[0].layers).filter(layer => layer.ran).length
+    : 6;
 
   // Detect new events for animation
   useEffect(() => {

@@ -63,7 +63,7 @@ export default function Login() {
             <input
               type="email"
               required
-              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md"
+              className="bg-black/40 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md"
               placeholder="operator@system.local"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
