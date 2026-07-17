@@ -75,7 +75,7 @@ export default function Login() {
             <input
               type="password"
               required
-              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
+              className="bg-black/40 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
