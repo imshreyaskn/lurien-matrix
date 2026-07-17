@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lurien Matrix - Cover</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #000000;
+            color: #E0E0E0;
+            font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Signature Lurien Matrix background texture */
+            background-image: 
+                radial-gradient(circle at center, transparent 0%, #000 100%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            width: 100vw;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        img {
+            width: 192px; /* 2x size of login page */
+            height: 192px;
+            object-fit: contain;
+            opacity: 0.9;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 56px; /* 2x size of login page */
+            font-weight: 300;
+            letter-spacing: 0.2em; /* Tracking widest */
+            color: #FFFFFF;
+            text-transform: uppercase;
+            line-height: 1.2;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Assuming logo.png is in the same directory (public) -->
+        <img src="./logo.png" alt="Lurien Matrix Logo" />
+        <h1>Lurien Matrix</h1>
+    </div>
+</body>
+</html>
