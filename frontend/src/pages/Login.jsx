@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -21,7 +21,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.detail || 'Failed to login. Check your credentials.');
+      setError(err.detail || 'ACCESS DENIED: Invalid identity or passcode.');
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ export default function Login() {
       await login('demo@lurien.ai', 'demo1234');
       navigate('/');
     } catch (err) {
-      setError(err.detail || 'Failed to login to demo account.');
+      setError(err.detail || 'ACCESS DENIED: Demo authentication failed.');
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,12 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="p-3 border border-firewall-red bg-firewall-red/10 text-firewall-red text-sm font-mono">
-            [ERROR] {error}
+          <div className="p-4 border-l-2 border-firewall-red bg-firewall-red/10 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-firewall-red shrink-0 mt-0.5" />
+            <div className="flex flex-col">
+              <span className="text-firewall-red font-bold text-xs tracking-widest uppercase mb-1">Authentication Failed</span>
+              <span className="text-firewall-red/80 text-sm font-mono">{error}</span>
+            </div>
           </div>
         )}
 
