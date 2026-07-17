@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -18,7 +18,8 @@ export default function Signup() {
     setError('');
     
     if (password !== confirmPassword) {
-      return setError('Passcodes do not match.');
+      setError('VALIDATION_ERROR: Passcodes do not match.');
+      return;
     }
     if (password.length < 6) {
       return setError('Passcode must be at least 6 characters.');
@@ -31,7 +32,7 @@ export default function Signup() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError(err.detail || err.error || "Failed to request access. Identity may already exist.");
+      setError(err.detail || 'SYSTEM_ERROR: Credential generation failed.');
     } finally {
       setLoading(false);
     }
@@ -49,8 +50,12 @@ export default function Signup() {
         </div>
 
         {error && (
-          <div className="p-3 border border-firewall-red bg-firewall-red/10 text-firewall-red text-sm font-mono animate-blocked-shake">
-            [ERROR] {error}
+          <div className="p-4 border-l-2 border-firewall-red bg-firewall-red/10 flex items-start gap-3 animate-blocked-shake">
+            <AlertTriangle className="w-5 h-5 text-firewall-red shrink-0 mt-0.5" />
+            <div className="flex flex-col">
+              <span className="text-firewall-red font-bold text-xs tracking-widest uppercase mb-1">Credential Error</span>
+              <span className="text-firewall-red/80 text-sm font-mono">{error}</span>
+            </div>
           </div>
         )}
 
@@ -72,7 +77,7 @@ export default function Signup() {
             <input
               type="password"
               required
-              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
+              className="bg-black/40 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -84,7 +89,7 @@ export default function Signup() {
             <input
               type="password"
               required
-              className="bg-luma-50 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
+              className="bg-black/40 border border-luma-300 p-3 text-luma-FFF focus:outline-none focus:border-luma-700 transition-colors rounded-md font-mono tracking-widest"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
