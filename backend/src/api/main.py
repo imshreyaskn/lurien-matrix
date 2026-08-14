@@ -36,7 +36,7 @@ from src.api.errors import (
 )
 from src.api.routes import check, proxy, keys, dashboard, health
 
-load_dotenv()
+load_dotenv(override=True)
 
 # ── Logging Configuration ─────────────────────────────────────
 
