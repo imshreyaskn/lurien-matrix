@@ -16,10 +16,6 @@
   <img src="https://img.shields.io/badge/Live%20Dashboard-lurienmatrix.vercel.app-8B7355?style=for-the-badge" />
 </a>
 
-<a href="https://github.com/imshreyaskn/lurien-matrix">
-  <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" />
-</a>
-
 </div>
 
 ---
