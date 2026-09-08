@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><link rel="stylesheet" href="style.css"/></head>
+<body>
+
+<div class="slide" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+  <img src="assets/logo_mono.png" style="width:64px; height:64px; margin-bottom:34px; opacity:0.92;"/>
+  <div style="font-size:13px; letter-spacing:6px; color:var(--faint); text-transform:uppercase; margin-bottom:22px;">
+    Multi-Layer LLM Firewall Proxy
+  </div>
+  <h1 style="font-size:56px; font-weight:600; letter-spacing:-1px; margin-bottom:20px; color:var(--white);">
+    LURIEN MATRIX
+  </h1>
+  <p style="font-size:17px; color:var(--dim); max-width:640px; line-height:1.6; margin-bottom:40px;">
+    A proxy-based firewall that intercepts prompt injection, jailbreak, and data-exfiltration
+    attacks before they ever reach the underlying model.
+  </p>
+  <div style="display:flex; gap:44px;">
+    <div style="text-align:center;">
+      <div style="font-size:26px; font-weight:600;">6</div>
+      <div style="font-size:10.5px; letter-spacing:1.5px; color:var(--faint); text-transform:uppercase; margin-top:4px;">Defense Layers</div>
+    </div>
+    <div style="width:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:26px; font-weight:600;">8&ndash;35ms</div>
+      <div style="font-size:10.5px; letter-spacing:1.5px; color:var(--faint); text-transform:uppercase; margin-top:4px;">Pipeline Latency</div>
+    </div>
+    <div style="width:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:26px; font-weight:600;">96%</div>
+      <div style="font-size:10.5px; letter-spacing:1.5px; color:var(--faint); text-transform:uppercase; margin-top:4px;">Detection Rate</div>
+    </div>
+  </div>
+</div>
+<div class="slide">
+  <div class="kicker">The Problem</div>
+  <h1 class="title">LLM applications are an open attack surface</h1>
+  <p class="lede">As LLMs are wired directly into products, they inherit a class of vulnerabilities
+    that traditional web application firewalls were never built to catch.</p>
+
+  <div class="grid2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/alert-triangle.svg" alt="alert-triangle" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Prompt Injection</div>
+      <div class="card-body">Malicious instructions hidden inside user input or retrieved documents override the system prompt.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/user-x.svg" alt="user-x" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Jailbreak Attacks</div>
+      <div class="card-body">Role-play, obfuscation, and persona-hijacking techniques bypass a model&rsquo;s built-in alignment.</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/database.svg" alt="database" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Data Exfiltration</div>
+      <div class="card-body">Crafted prompts attempt to leak system prompts, credentials, or internal context back to the attacker.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/sliders.svg" alt="sliders" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> No Standard Defense</div>
+      <div class="card-body">Most teams rely on the base model&rsquo;s alignment alone &mdash; there is no dedicated inspection layer in front of it.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border); font-size:14px; color:var(--dim);">
+    Traditional WAFs secure APIs &mdash; not prompts.
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>02 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">The Solution</div>
+  <h1 class="title">A firewall built for the LLM layer</h1>
+  <p class="lede">Lurien Matrix sits between the client and the model provider as a lightweight proxy,
+    scoring every prompt through a six-layer pipeline before a single token reaches the provider.</p>
+
+  <div class="flow-row" style="margin-bottom:28px;">
+    <div class="flow-node">
+      <img src="https://unpkg.com/lucide-static@0.344.0/icons/terminal.svg" alt="terminal" style="width:20px; height:20px; vertical-align:middle; filter: invert(1); opacity: 0.8;" />
+      <div><div class="name">Client App</div><div class="sub">User / API caller</div></div>
+    </div>
+    <div class="flow-arrow"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div>
+    <div class="flow-node hi">
+      <img src="https://unpkg.com/lucide-static@0.344.0/icons/shield-check.svg" alt="shield-check" style="width:20px; height:20px; vertical-align:middle; filter: invert(1); opacity: 0.8;" />
+      <div><div class="name">Lurien Matrix</div><div class="sub">6-layer pipeline &middot; /v1/check</div></div>
+    </div>
+    <div class="flow-arrow"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:18px; height:18px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div>
+    <div class="flow-node">
+      <img src="https://unpkg.com/lucide-static@0.344.0/icons/cpu.svg" alt="cpu" style="width:20px; height:20px; vertical-align:middle; filter: invert(1); opacity: 0.8;" />
+      <div><div class="name">Model Provider</div><div class="sub">OpenAI &middot; Claude &middot; Gemini &middot; Mistral</div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><span class="pill green">PASS &mdash; Safe</span></div>
+      <div class="card-body">Forwarded to the provider; response streamed straight back to the client.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="pill red">BLOCK &mdash; Threat</span></div>
+      <div class="card-body">Provider is never invoked. A 403 with threat telemetry returns instantly.</div>
+    </div>
+  </div>
+
+  <ul class="plain" style="margin-top:22px; display:flex; gap:36px;">
+    <li><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:16px; height:16px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> <span><b>Drop-in proxy</b> &mdash; one REST endpoint, no model changes</span></li>
+    <li><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:16px; height:16px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> <span><b>Provider agnostic</b> &mdash; works across LLM vendors</span></li>
+    <li><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:16px; height:16px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> <span><b>Blocks before inference</b> &mdash; threats never reach the model</span></li>
+  </ul>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>03 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Core Engine</div>
+  <h1 class="title">The six-layer defense pipeline</h1>
+  <p class="lede">Synchronous, fail-fast evaluation. Deterministic checks resolve obvious cases in
+    microseconds, reserving the ML classifier and semantic search for genuinely ambiguous payloads.</p>
+
+  <div class="layer-row" style="margin-bottom:26px;">
+    <div class="layer-box"><div class="tag">L0</div><div class="lname">Canary Tokens</div><div class="lat"><1ms</div></div><div class="layer-connector"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div><div class="layer-box"><div class="tag">L1a</div><div class="lname">Rule-Based</div><div class="lat"><5ms</div></div><div class="layer-connector"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div><div class="layer-box"><div class="tag">L1b</div><div class="lname">Heuristic Analysis</div><div class="lat"><20ms</div></div><div class="layer-connector"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div><div class="layer-box"><div class="tag">L2</div><div class="lname">Embedding Similarity</div><div class="lat"><15ms</div></div><div class="layer-connector"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div><div class="layer-box"><div class="tag">L3</div><div class="lname">ML Classifier</div><div class="lat"><100ms</div></div><div class="layer-connector"><img src="https://unpkg.com/lucide-static@0.344.0/icons/arrow-right.svg" alt="arrow-right" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div><div class="layer-box"><div class="tag">L4</div><div class="lname">Context Policy</div><div class="lat"><5ms</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/x-circle.svg" alt="x-circle" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Any layer flags</div>
+      <div class="card-body">Request blocked instantly. Remaining layers are skipped &mdash; the pipeline never wastes compute on a decision already made.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> All layers pass</div>
+      <div class="card-body">Request is forwarded to the underlying LLM with full pipeline telemetry attached.</div>
+    </div>
+  </div>
+  <div style="margin-top:20px;"><span class="pill neutral">FAIL-FAST</span> <span class="tag-line" style="margin-left:10px;">Short-circuits the moment cumulative risk crosses the threshold.</span></div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>04 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Detection Engine</div>
+  <h1 class="title">Why six weak signals beat one strong classifier</h1>
+  <p class="lede">Each layer independently catches what the others miss. Risk compounds across layers instead
+    of relying on a single max score.</p>
+
+  <table class="spec" style="margin-bottom:20px;">
+    <thead><tr><th>Layer</th><th>Mechanism</th><th>Catches</th><th class="center">Latency</th></tr></thead>
+    <tbody><tr><td class="strong">Canary Tokens</td><td>Exact-match cryptographic tokens hidden in the system prompt</td><td>Data exfiltration &mdash; flags a model echoing back hidden context</td><td class="center">&lt;1ms</td></tr><tr><td class="strong">Rule-Based Engine</td><td>Regex &amp; reversed-text pattern matching</td><td>Known jailbreak structures, direct overrides, base64 payloads</td><td class="center">&lt;5ms</td></tr><tr><td class="strong">Heuristic Analysis</td><td>Weighted risk signals: instruction density, entropy, obfuscation</td><td>Structurally anomalous payloads no fixed rule matches</td><td class="center">&lt;20ms</td></tr><tr><td class="strong">Embedding Similarity</td><td>SentenceTransformers + FAISS distance vs. known attacks</td><td>Paraphrased, zero-day variants of known attacks</td><td class="center">&lt;15ms</td></tr><tr><td class="strong">ML Classifier</td><td>Fine-tuned transformer, exported to ONNX for CPU inference</td><td>Role override, goal hijacking, context poisoning, tool manipulation</td><td class="center">&lt;100ms</td></tr><tr><td class="strong">Context Policy</td><td>Cross-references intent against the API key&rsquo;s scoped profile</td><td>Persona hijacking &mdash; keeps the model inside its intended use case</td><td class="center">&lt;5ms</td></tr></tbody>
+  </table>
+
+  <div class="card" style="display:flex; align-items:center; gap:26px;">
+    <div style="flex-shrink:0;"><img src="https://unpkg.com/lucide-static@0.344.0/icons/layers.svg" alt="layers" style="width:22px; height:22px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></div>
+    <div style="flex:1;">
+      <div class="card-title" style="margin-bottom:4px;">Cumulative risk ensemble</div>
+      <div class="card-body">A multi-vector attack where no single layer crosses the threshold alone is still caught cumulatively.</div>
+    </div>
+    <div class="code-block" style="flex-shrink:0; font-size:12px;">risk = 1 &minus; [(1&minus;risk) &times; (1&minus;layer_score)]</div>
+    <div style="text-align:center; flex-shrink:0;">
+      <div class="num" style="font-size:22px; font-weight:600;">50%</div>
+      <div class="label" style="font-size:9.5px; color:var(--faint); letter-spacing:1px; text-transform:uppercase;">Default threshold</div>
+    </div>
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>05 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Implementation</div>
+  <h1 class="title">Technology stack</h1>
+  <p class="lede">Lightweight, async-first frameworks chosen for throughput and simplicity.</p>
+
+  <div class="grid4">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/server.svg" alt="server" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Backend</div>
+      <ul style="list-style:none; font-size:12.5px; color:var(--dim); line-height:2;"><li>FastAPI (async)</li><li>httpx &mdash; proxy client</li><li>Motor &mdash; MongoDB driver</li><li>Redis &mdash; rate limiting</li></ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/cpu.svg" alt="cpu" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Machine Learning</div>
+      <ul style="list-style:none; font-size:12.5px; color:var(--dim); line-height:2;"><li>Fine-tuned classifier</li><li>ONNX runtime (CPU)</li><li>SentenceTransformers</li><li>FAISS nearest-neighbor</li></ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/monitor.svg" alt="monitor" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Dashboard</div>
+      <ul style="list-style:none; font-size:12.5px; color:var(--dim); line-height:2;"><li>React + Vite</li><li>TailwindCSS</li><li>D3.js &mdash; threat graphs</li><li>Recharts &mdash; time-series</li></ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/package.svg" alt="package" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Client SDK</div>
+      <ul style="list-style:none; font-size:12.5px; color:var(--dim); line-height:2;"><li>lurien-matrix (npm)</li><li>Express middleware</li><li>Proxy-mode client</li><li>fw.check() / checkBatch()</li></ul>
+    </div>
+  </div>
+
+  <div style="margin-top:22px; font-size:12.5px; color:var(--faint);">
+    Hosting &mdash; backend on a containerized Space &middot; MongoDB Atlas + Upstash Redis, both remote-managed
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>06 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Working Product</div>
+  <h1 class="title">Live threat telemetry dashboard</h1>
+  <p class="lede">Real-time visibility into every request the firewall inspects &mdash; pipeline layer, risk score, and vector class.</p>
+
+  <div class="grid2">
+    <div>
+      <img class="dash-shot" src="assets/dash-overview.png"/>
+      <div class="dash-caption">Overview &mdash; Threat Matrix Telemetry</div>
+    </div>
+    <div>
+      <img class="dash-shot" src="assets/dash-livemonitor.png"/>
+      <div class="dash-caption">Live Monitor &mdash; Ingress Pipeline</div>
+    </div>
+  </div>
+  <div style="margin-top:18px; display:flex; gap:30px;">
+    <div class="tag-line"><img src="https://unpkg.com/lucide-static@0.344.0/icons/activity.svg" alt="activity" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Live threat telemetry</div>
+    <div class="tag-line"><img src="https://unpkg.com/lucide-static@0.344.0/icons/eye.svg" alt="eye" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Real-time monitoring</div>
+    <div class="tag-line"><img src="https://unpkg.com/lucide-static@0.344.0/icons/bar-chart.svg" alt="bar-chart" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Vector analytics</div>
+    <div class="tag-line"><img src="https://unpkg.com/lucide-static@0.344.0/icons/search.svg" alt="search" style="width:14px; height:14px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Full audit log</div>
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>07 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Production Benchmarks</div>
+  <h1 class="title">Measured on live deployment</h1>
+  <p class="lede">50 known-malicious prompt injection vectors vs. 50 safe conversational prompts &mdash; CPU-basic tier.</p>
+
+  <div class="grid4" style="margin-bottom:26px;">
+    <div class="stat hi"><div class="num">96.0%</div><div class="label">True Positive Rate</div></div>
+    <div class="stat"><div class="num">2.0%</div><div class="label">False Positive Rate</div></div>
+    <div class="stat"><div class="num">48 / 50</div><div class="label">Malicious Prompts Caught</div></div>
+    <div class="stat"><div class="num">8&ndash;35ms</div><div class="label">Server-Side Pipeline Time</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/bar-chart.svg" alt="bar-chart" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> End-to-end latency, cold vs. warm</div>
+      <img src="assets/latency-chart.png" style="width:100%; margin-top:6px; border-radius:4px; border:1px solid var(--border);"/>
+    </div>
+    <div class="card">
+      <div class="card-title">Why the gap is network, not the firewall</div>
+      <div class="card-body">Cold-start figures are measured over a transatlantic connection against a free-tier container.
+        The pipeline itself resolves in 8&ndash;35ms server-side &mdash; the rest is container warm-up and network
+        round-trip, both of which disappear on a warm, region-local instance.</div>
+    </div>
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>08 / 10</div>
+    </div>
+</div>
+<div class="slide">
+  <div class="kicker">Positioning</div>
+  <h1 class="title">Why a firewall, not just alignment</h1>
+  <p class="lede">Base-model alignment and generic guardrail libraries were not designed for a dedicated,
+    provider-agnostic inspection layer.</p>
+
+  <table class="spec">
+    <thead><tr><th>Capability</th><th class="center">Alignment-Only Guardrails</th><th class="center">Lurien Matrix</th></tr></thead>
+    <tbody><tr><td class="strong">Proxy architecture, drop-in</td><td class="center"><span class="cross"><img src="https://unpkg.com/lucide-static@0.344.0/icons/x-circle.svg" alt="x-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr><tr><td class="strong">Multi-layer, cumulative defense</td><td class="center"><span class="cross"><img src="https://unpkg.com/lucide-static@0.344.0/icons/x-circle.svg" alt="x-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr><tr><td class="strong">Semantic / paraphrase detection</td><td class="center"><span class="dim">Limited</span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr><tr><td class="strong">Explainable, per-layer decisions</td><td class="center"><span class="dim">Limited</span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr><tr><td class="strong">Provider-agnostic</td><td class="center"><span class="dim">Often no</span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr><tr><td class="strong">Native SDK integration</td><td class="center"><span class="dim">Limited</span></td><td class="center"><span class="check"><img src="https://unpkg.com/lucide-static@0.344.0/icons/check-circle.svg" alt="check-circle" style="width:15px; height:15px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /></span></td></tr></tbody>
+  </table>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>09 / 10</div>
+    </div>
+</div>
+<div class="slide" style="display:flex; flex-direction:column; justify-content:center;">
+  <div class="kicker">What&rsquo;s Next</div>
+  <h1 class="title" style="margin-bottom:26px;">Where it goes from here</h1>
+
+  <div class="grid3" style="margin-bottom:44px;">
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/activity.svg" alt="activity" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Streaming Defense</div>
+      <div class="card-body">Async output monitor for streamed LLM responses.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/layers.svg" alt="layers" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Semantic Policy</div>
+      <div class="card-body">Context-aware semantic policy layer as the core research contribution.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><img src="https://unpkg.com/lucide-static@0.344.0/icons/lock.svg" alt="lock" style="width:17px; height:17px; vertical-align:middle; filter: invert(1); opacity: 0.8;" /> Production Hardening</div>
+      <div class="card-body">Load testing, key rotation, and multi-tenant rate limits.</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--border); padding-top:30px;">
+    <p style="font-size:22px; font-weight:600; line-height:1.5; max-width:920px; color:var(--white);">
+      Lurien Matrix turns LLM security from reactive alignment into a proactive firewall layer.
+    </p>
+  </div>
+  
+    <div class="footer">
+      <div class="brandmark"><img src="assets/logo_mono.png"/> LURIEN MATRIX</div>
+      <div>10 / 10</div>
+    </div>
+</div>
+</body></html>

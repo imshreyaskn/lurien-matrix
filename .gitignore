@@ -39,8 +39,10 @@ out/
 .DS_Store
 Thumbs.db
 
-# Large Model Weights (Tracked directly per user request)
+# Large Model Weights (Excluded from GitHub)
 backend/models/*.tgz
+backend/models/*.onnx
+backend/models/*.bin
 
 # Local tests folder
 tests/
