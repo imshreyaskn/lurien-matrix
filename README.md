@@ -1,18 +1,23 @@
 <div align="center">
 
-# Lurien Matrix
+<img src="./frontend/public/logo.png" alt="Lurien Matrix" width="180" />
 
-### LLM Security Firewall
+<h1>Lurien Matrix</h1>
 
-A proxy-based security layer that sits between applications and LLM providers, inspecting requests for prompt injection and related attacks before they reach the model.
+<p>
+  A proxy-based security layer for detecting prompt injection,
+  malicious instructions, and unsafe model output before they
+  reach the application.
+</p>
 
 <br />
 
 <a href="https://lurienmatrix.vercel.app/">
-  <img src="https://img.shields.io/badge/Live%20Dashboard-lurienmatrix.vercel.app-blue?style=for-the-badge" alt="Live Dashboard" />
+  <img src="https://img.shields.io/badge/Live%20Dashboard-lurienmatrix.vercel.app-8B7355?style=for-the-badge" />
 </a>
+
 <a href="https://github.com/imshreyaskn/lurien-matrix">
-  <img src="https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github" alt="GitHub Repository" />
+  <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" />
 </a>
 
 </div>
