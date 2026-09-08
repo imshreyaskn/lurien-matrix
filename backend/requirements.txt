@@ -7,14 +7,11 @@ redis[hiredis]==5.2.1
 neo4j>=5.0
 python-dotenv==1.0.1
 pydantic[email]==2.10.4
-pydantic-settings==2.7.1
-passlib[bcrypt]==1.7.4
+bcrypt>=4.0.0
 python-jose[cryptography]==3.3.0
 transformers==4.46.3
 torch==2.6.0
-safetensors
 numpy==2.2.1
-python-multipart==0.0.20
 optimum[onnxruntime]
 onnx
 sentence-transformers==3.4.0
