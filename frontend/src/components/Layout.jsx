@@ -17,7 +17,7 @@ export default function Layout() {
       <FloatingIsland />
       
       {/* Edge-to-Edge Content Canvas */}
-      <main className="absolute inset-0 z-10 scanline overflow-y-auto">
+      <main className="absolute inset-0 z-10 overflow-y-auto">
         <div className="min-h-full px-4 md:px-12 pt-8 pb-32 max-w-[2000px] mx-auto">
           <Outlet />
         </div>

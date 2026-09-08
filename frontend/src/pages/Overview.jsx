@@ -1,5 +1,15 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, AlertTriangle, Zap, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+
+const DEFAULT_LAYERS = [
+  { name: 'Canary Token', color: '#9B4444' },
+  { name: 'Rule-Based', color: '#C89F3C' },
+  { name: 'Heuristic', color: '#4A7C59' },
+  { name: 'Embedding Similarity', color: '#456B7D' },
+  { name: 'ML Classifier', color: '#6B5B95' },
+  { name: 'Context Policy', color: '#D4B89E' },
+];
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { usePolling } from '../hooks/usePolling';
 import { api } from '../utils/api';
@@ -127,8 +137,16 @@ export default function Overview() {
               </div>
             </div>
           ) : (
-            <div className="h-48 flex items-center justify-center text-luma-500 font-mono text-sm uppercase tracking-widest">
-              Awaiting Payload Data...
+            <div className="h-48 flex flex-col items-center justify-center gap-2 text-center font-mono">
+              <Shield className="w-8 h-8 text-luma-500/30" />
+              <p className="text-xs text-luma-400 uppercase tracking-widest">
+                {stats?.total_checks > 0 ? 'Zero Threats Detected' : 'No Vectors Recorded'}
+              </p>
+              <p className="text-[11px] text-luma-600 max-w-xs">
+                {stats?.total_checks > 0
+                  ? 'All recent traffic passed clean through the firewall.'
+                  : 'Vector distribution will populate as prompt traffic is analyzed.'}
+              </p>
             </div>
           )}
         </div>
@@ -139,33 +157,46 @@ export default function Overview() {
             <h3 className="text-xs font-bold text-luma-700 tracking-widest uppercase">
               Matrix Interception Layers
             </h3>
-            <span className="text-xs text-luma-500 font-mono tracking-widest uppercase bg-black/20 px-3 py-1 rounded-full border border-white/5">
-              {layerData.length}/6 ACTIVE
+            <span className="text-xs text-status-online font-mono tracking-widest uppercase bg-status-online/10 px-3 py-1 rounded-full border border-status-online/30 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-online"></span>
+              {layerData.length > 0 ? `${layerData.length}/6 TRIGGERED` : '6/6 ARMED'}
             </span>
           </div>
-          <div className="space-y-5 mt-6 font-mono">
-            {layerData.map((layer) => (
-              <div key={layer.name} className="space-y-1">
-                <div className="flex justify-between text-xs uppercase tracking-widest">
-                  <span className="text-luma-500">{layer.name}</span>
-                  <span className="font-bold text-luma-FFF">
-                    {layer.value.toFixed(1)}%
-                  </span>
+          <div className="space-y-4 mt-6 font-mono">
+            {layerData.length > 0 ? (
+              layerData.map((layer) => (
+                <div key={layer.name} className="space-y-1">
+                  <div className="flex justify-between text-xs uppercase tracking-widest">
+                    <span className="text-luma-500">{layer.name}</span>
+                    <span className="font-bold text-luma-FFF">
+                      {layer.value.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-[1px] bg-luma-300 w-full relative">
+                    <div
+                      className="absolute top-0 left-0 h-[1px] transition-all duration-1000"
+                      style={{ width: `${layer.value}%`, backgroundColor: layer.color }}
+                    />
+                  </div>
                 </div>
-                <div className="h-[1px] bg-luma-300 w-full relative">
-                  <div
-                    className="absolute top-0 left-0 h-[1px] transition-all duration-1000"
-                    style={{ width: `${layer.value}%`, backgroundColor: layer.color }}
-                  />
+              ))
+            ) : (
+              DEFAULT_LAYERS.map((layer) => (
+                <div key={layer.name} className="space-y-1">
+                  <div className="flex justify-between text-xs uppercase tracking-widest">
+                    <span className="text-luma-500">{layer.name}</span>
+                    <span className="text-status-online/80 font-mono text-[10px] tracking-wider">ARMED</span>
+                  </div>
+                  <div className="h-[1px] bg-white/5 w-full relative">
+                    <div
+                      className="absolute top-0 left-0 h-[1px] opacity-40"
+                      style={{ width: '100%', backgroundColor: layer.color }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          {layerData.length === 0 && (
-            <div className="h-32 flex items-center justify-center text-luma-500 font-mono text-sm uppercase tracking-widest">
-              Matrix Inactive
-            </div>
-          )}
         </div>
       </div>
 
@@ -209,10 +240,22 @@ export default function Overview() {
             ))}
           </div>
         ) : (
-          <div className="h-32 flex items-center justify-center text-luma-500 font-mono text-sm tracking-widest uppercase border border-dashed border-luma-300">
-            <div className="text-center">
-              <p>AWAITING INGRESS SIGNALS...</p>
+          <div className="py-12 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-white/10 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-status-online animate-pulse" />
+              <span className="text-xs font-mono text-status-online tracking-widest uppercase font-semibold">Firewall Active & Listening</span>
             </div>
+            <p className="text-sm font-sans font-medium text-luma-FFF">No Requests Logged Yet</p>
+            <p className="text-xs font-mono text-luma-500 max-w-md">
+              Your account is ready. Send prompts via your API key or test live attacks in the Live Monitor.
+            </p>
+            <Link
+              to="/monitor"
+              className="mt-2 px-4 py-2 bg-white/10 hover:bg-white/15 text-accent-gold border border-accent-gold/30 rounded text-xs font-mono uppercase tracking-wider transition-colors inline-flex items-center gap-2"
+            >
+              <span>Open Live Monitor</span>
+              <span>&rarr;</span>
+            </Link>
           </div>
         )}
       </div>
