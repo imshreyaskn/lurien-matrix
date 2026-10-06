@@ -1,0 +1,33 @@
+name: Keep-Alive Pinger
+
+on:
+  schedule:
+    # Run every 12 hours (00:00 and 12:00 UTC)
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Hugging Face Gateway
+        run: |
+          curl -s --max-time 30 https://imdrizzle-lurien-matrix-firewall.hf.space/health || true
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install neo4j
+        run: pip install neo4j
+
+      - name: Ping Neo4j Threat Graph
+        env:
+          NEO4J_URI: ${{ secrets.NEO4J_URI || 'neo4j+s://04935f05.databases.neo4j.io' }}
+          NEO4J_USER: ${{ secrets.NEO4J_USER || '04935f05' }}
+          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD || 'Qw2Nf_Ie5Ro55k58OZpL9SX5qkI-z2GmXBLbyPmFj8I' }}
+        run: python scripts/ping_neo4j.py
