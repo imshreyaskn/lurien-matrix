@@ -44,7 +44,6 @@ class PipelineResult:
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """Convert to JSON-serializable dictionary."""
         return asdict(self)
 
 
@@ -83,7 +82,6 @@ class ClassifierPipeline:
         self.model_version = "1.0.0"
 
     def load_model(self) -> bool:
-        """Load the ML model. Call during app startup."""
         return self.ml_classifier.load()
 
     @property
@@ -99,9 +97,6 @@ class ClassifierPipeline:
         custom_canary: Optional[str] = None,
         use_openai_moderation: bool = False,
     ) -> PipelineResult:
-        """
-        Run the full 6-layer pipeline on the given text.
-        """
         start = time.perf_counter()
         threshold = threshold if threshold is not None else self.default_threshold
         request_id = str(uuid.uuid4())
@@ -111,7 +106,6 @@ class ClassifierPipeline:
         request_custom_canary.set(custom_canary or "")
         warnings: list[str] = []
 
-        # Initialize results structure
         layers_data = {}
         cumulative_risk = 0.0
 
@@ -120,7 +114,6 @@ class ClassifierPipeline:
             cumulative_risk = 1.0 - ((1.0 - cumulative_risk) * (1.0 - score))
             return cumulative_risk
 
-        # Helper to build short-circuited response
         def build_short_circuit(flagged_name, risk, attack, pattern, running_layers):
             all_layer_names = ["canary", "rule_based", "heuristic", "embedding_similarity", "openai_moderation", "ml_classifier", "context_policy"]
             final_layers = {}
@@ -318,5 +311,4 @@ class ClassifierPipeline:
 
 
 def _elapsed_ms(start: float) -> float:
-    """Calculate elapsed milliseconds from a perf_counter start."""
     return round((time.perf_counter() - start) * 1000, 2)

@@ -38,11 +38,9 @@ async def connect(uri: str, db_name: str = "llm_firewall") -> AsyncIOMotorDataba
 
 async def _create_indexes(db: AsyncIOMotorDatabase) -> None:
     """Create necessary indexes for performance."""
-    # users
     users = db.users
     await users.create_index("email", unique=True)
 
-    # firewall_logs
     logs = db.firewall_logs
     await logs.create_index("request_id", unique=True)
     await logs.create_index("timestamp")
@@ -55,13 +53,11 @@ async def _create_indexes(db: AsyncIOMotorDatabase) -> None:
     await logs.create_index("provider")
     await logs.create_index([("timestamp", -1), ("safe", 1)])
 
-    # api_keys
     keys = db.api_keys
     await keys.create_index("key_hash", unique=True)
     await keys.create_index("is_active")
     await keys.create_index("user_id")
 
-    # daily_stats
     stats = db.daily_stats
     await stats.create_index([("api_key_id", 1), ("date", 1)], unique=True)
 

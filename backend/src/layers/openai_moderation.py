@@ -19,7 +19,6 @@ class OpenAIModerationLayer:
     Only runs if OPENAI_API_KEY is present in environment.
     """
     def __init__(self, api_key: Optional[str] = None):
-        # Allow passing key directly or falling back to env var
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.url = "https://api.openai.com/v1/moderations"
         self.enabled = bool(self.api_key)

@@ -80,7 +80,6 @@ class ContextAwarePolicyLayer:
     ) -> PolicyResult:
         start = time.perf_counter()
 
-        # general = no policy, always pass
         if app_context == "general" or \
            app_context not in self._profile_embeddings:
             latency = (time.perf_counter() - start) * 1000

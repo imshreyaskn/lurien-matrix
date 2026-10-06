@@ -87,7 +87,6 @@ async def check_rate_limit(api_key_id: str) -> RateLimitStatus:
     Uses Redis INCR + EXPIRE for atomic sliding window counting.
     """
     if _redis is None:
-        # No Redis = FAIL CLOSED (deny requests when Redis is down)
         return RateLimitStatus(
             allowed=False, 
             limit_type="system_outage",
@@ -97,7 +96,6 @@ async def check_rate_limit(api_key_id: str) -> RateLimitStatus:
     limits = RATE_LIMITS
     now = datetime.now(timezone.utc)
 
-    # ── Per-minute check ──
     current_minute = now.strftime("%Y%m%d%H%M")
     minute_key = f"rate:{api_key_id}:minute:{current_minute}"
     
@@ -118,7 +116,6 @@ async def check_rate_limit(api_key_id: str) -> RateLimitStatus:
             retry_after_seconds=max(ttl, 1),
         )
 
-    # ── Per-month check ──
     month_key = f"rate:{api_key_id}:month:{now.strftime('%Y-%m')}"
     
     async with _redis.pipeline(transaction=True) as pipe:

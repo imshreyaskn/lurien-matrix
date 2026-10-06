@@ -15,7 +15,6 @@ function createMiddleware(fwInstance, options = {}) {
       const prompt = extractFn(req);
 
       if (!prompt) {
-        // If there's no prompt found in the body, skip validation or return 400 depending on config
         if (options.failOnMissingPrompt) {
           return res.status(400).json({
             error: "bad_request",
@@ -25,13 +24,11 @@ function createMiddleware(fwInstance, options = {}) {
         return next();
       }
 
-      // Call firewall direct check endpoint
       const result = await fwInstance.check(prompt);
 
       if (!result.safe) {
         const errorMsg = `Prompt blocked: ${result.attack_type} (${(result.confidence * 100).toFixed(0)}% confidence)`;
         
-        // Custom callback on block
         if (typeof fwInstance.options.onBlocked === 'function') {
           fwInstance.options.onBlocked(result);
         }
@@ -52,14 +49,12 @@ function createMiddleware(fwInstance, options = {}) {
         });
       }
 
-      // Prompt is safe, proceed to the handler
       next();
     } catch (err) {
       if (typeof fwInstance.options.onError === 'function') {
         fwInstance.options.onError(err);
       }
 
-      // Safe fallback option
       if (options.failOnError) {
         return res.status(500).json({
           error: "firewall_error",

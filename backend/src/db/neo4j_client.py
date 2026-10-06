@@ -31,14 +31,11 @@ async def connect(uri: str, user: str, password: str) -> None:
         return
 
     try:
-        # max_connection_pool_size=5 is appropriate for our FastAPI workers
         _driver = AsyncGraphDatabase.driver(
             uri, auth=(user, password), max_connection_pool_size=5
         )
-        # Verify connection
         await _driver.verify_connectivity()
         
-        # Create indexes
         await _create_indexes()
 
         # Initialize the bounded write queue and worker task
@@ -107,12 +104,10 @@ async def _writer_worker():
             break
             
         try:
-            # Wait for at least one item
             item = await _write_queue.get()
             batch = [item]
             _write_queue.task_done()
             
-            # Drain up to 100 items per batch
             while len(batch) < 100:
                 try:
                     next_item = _write_queue.get_nowait()
@@ -145,7 +140,6 @@ async def _keep_alive_worker():
     logger.info("Neo4j keep-alive worker started")
     while True:
         try:
-            # Wait for 12 hours (12 * 3600 seconds)
             await asyncio.sleep(43200)
             
             if _driver:
@@ -158,13 +152,12 @@ async def _keep_alive_worker():
             break
         except Exception as e:
             logger.error(f"Neo4j keep-alive worker error: {e}")
-            await asyncio.sleep(60) # Wait a minute before retrying on error
+            await asyncio.sleep(60)
 
 async def disconnect() -> None:
     """Stop the worker and close the Neo4j connection."""
     global _driver, _write_queue, _worker_task
     
-    # Cancel the background worker
     if _worker_task:
         _worker_task.cancel()
         try:

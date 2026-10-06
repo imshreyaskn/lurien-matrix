@@ -57,10 +57,8 @@ async def lifespan(app: FastAPI):
     logger.info("  LLM FIREWALL — Starting up...")
     logger.info("═══════════════════════════════════════════")
 
-    # Record start time
     app.state.start_time = time.time()
 
-    # Connect to MongoDB
     mongo_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     mongo_db = os.getenv("MONGODB_DB", "llm_firewall")
     try:
@@ -69,7 +67,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"✗ MongoDB connection failed: {e}")
 
-    # Connect to Redis
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
     try:
         await redis_db.connect(redis_url)
@@ -77,7 +74,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"⚠ Redis unavailable: {e} — rate limiting disabled")
 
-    # Connect to Neo4j
     neo4j_uri = os.getenv("NEO4J_URI")
     neo4j_user = os.getenv("NEO4J_USER")
     neo4j_pass = os.getenv("NEO4J_PASSWORD")
@@ -89,7 +85,6 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("⚠ Neo4j credentials missing — threat graph disabled")
 
-    # Initialize classifier pipeline & components
     model_path = os.getenv("MODEL_PATH", "models/")
     
     try:
@@ -109,7 +104,6 @@ async def lifespan(app: FastAPI):
         logger.error(f"✗ Failed to load SentenceTransformer: {e}")
         shared_st_model = None
 
-    # Initialize all layers
     canary = CanaryTokenDetector()
     rules = RuleBasedLayer()
     heuristic = HeuristicLayer()
@@ -126,7 +120,6 @@ async def lifespan(app: FastAPI):
     output_mon = OutputMonitor()
     openai_mod = OpenAIModerationLayer()
 
-    # Build pipeline
     pipeline = ClassifierPipeline(
         rule_based=rules,
         heuristic=heuristic,
@@ -163,7 +156,6 @@ async def lifespan(app: FastAPI):
     app.state.pipeline = pipeline
     app.state.output_monitor = output_mon
 
-    # Initialize proxy engine
     proxy_engine = ProxyEngine(pipeline=pipeline, output_monitor=output_mon)
     app.state.proxy_engine = proxy_engine
 
@@ -173,7 +165,6 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown
     logger.info("Shutting down LLM Firewall...")
     await proxy_engine.close()
     await neo4j_client.disconnect()

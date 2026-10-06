@@ -111,7 +111,6 @@ async def check_prompt(
             use_openai_moderation=key_doc.get("use_openai_moderation", False)
         )
 
-    # Set response headers
     response.headers["X-Firewall-Safe"] = str(result.safe).lower()
     response.headers["X-Firewall-Risk-Score"] = str(result.risk_score)
     response.headers["X-Firewall-Processing-Ms"] = str(result.processing_time_ms)
@@ -148,7 +147,6 @@ async def check_prompt(
     except Exception as e:
         logger.error(f"Failed to log check result: {e}")
 
-    # Update key usage stats
     try:
         update = {
             "$inc": {"total_checks": 1, "monthly_usage": 1},
@@ -186,13 +184,11 @@ async def check_batch(
 
     import asyncio
 
-    # Prepare concurrent tasks
     classification_tasks = []
     valid_prompts = []
     
     for prompt in body.prompts:
         if not prompt or not prompt.strip():
-            # Return error result for empty prompts
             results.append({
                 "request_id": str(uuid.uuid4()),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -228,7 +224,6 @@ async def check_batch(
         )
         classification_tasks.append(task)
         
-    # Execute valid prompts concurrently
     if classification_tasks:
         classification_results = await asyncio.gather(*classification_tasks)
         
@@ -236,7 +231,6 @@ async def check_batch(
             prompt = valid_prompts[idx]
             results.append(result.to_dict())
 
-            # Log each result
             try:
                 log_entry = {
                     "request_id": result.request_id,
@@ -265,7 +259,6 @@ async def check_batch(
             except Exception as e:
                 logger.error(f"Failed to log batch result: {e}")
 
-    # Set batch aggregate response headers
     overall_safe = all(res["safe"] for res in results)
     max_risk = max((res["risk_score"] for res in results), default=0.0)
     total_ms = sum(res["processing_time_ms"] for res in results)

@@ -47,8 +47,6 @@ class CanaryTokenDetector:
 
         prompt_lower = prompt.lower()
         for canary in canaries_to_check:
-            # Use constant-time comparison to prevent timing attacks
-            # Check lowercased versions
             if hmac.compare_digest(
                 canary.lower().ljust(256).encode('utf-8', errors='ignore'),
                 prompt_lower[:len(canary)].ljust(256).encode('utf-8', errors='ignore')

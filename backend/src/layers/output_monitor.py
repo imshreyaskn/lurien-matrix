@@ -66,7 +66,6 @@ class OutputMonitor:
         start = time.perf_counter()
         lower = response_text.lower()
 
-        # 1. PII detection — regex scan
         for pii_type, pattern in self.PII_PATTERNS.items():
             if re.search(pattern, response_text):
                 redacted = re.sub(pattern, f"[REDACTED:{pii_type.upper()}]",
@@ -80,7 +79,6 @@ class OutputMonitor:
                     latency_ms=round(latency, 3)
                 )
 
-        # 2. Canary echo — system prompt leaked
         canaries = [c for c in [self.canary, custom_canary] if c]
         for canary in canaries:
             if canary.lower() in lower:
@@ -92,7 +90,6 @@ class OutputMonitor:
                     latency_ms=round(latency, 3)
                 )
 
-        # 3. Refusal bypass language
         for pattern in self.REFUSAL_BYPASS_PATTERNS:
             if pattern in lower:
                 latency = (time.perf_counter() - start) * 1000
@@ -103,7 +100,6 @@ class OutputMonitor:
                     latency_ms=round(latency, 3)
                 )
 
-        # 4. Indirect injection signals
         for signal in self.INDIRECT_INJECTION_SIGNALS:
             if signal in lower:
                 latency = (time.perf_counter() - start) * 1000

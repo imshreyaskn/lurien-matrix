@@ -29,12 +29,10 @@ class LurienMatrix {
       ...options,
     };
 
-    // Strip trailing slashes from baseUrl
     if (this.options.baseUrl.endsWith('/')) {
       this.options.baseUrl = this.options.baseUrl.slice(0, -1);
     }
 
-    // Set up proxy client if requested
     if (this.options.mode === 'proxy') {
       const client = createProxyClient(this);
       const provider = this.options.provider;

@@ -42,14 +42,12 @@ async def proxy_llm_request(
       X-API-Key: firewall API key
       X-LLM-API-Key: the provider's API key (forwarded to LLM)
     """
-    # Validate provider
     if provider not in SUPPORTED_PROVIDERS:
         raise HTTPException(
             status_code=400,
             detail=f"Unsupported provider: {provider}. Supported: {', '.join(SUPPORTED_PROVIDERS)}",
         )
 
-    # Get LLM API key
     llm_api_key = request.headers.get("X-LLM-API-Key")
     if not llm_api_key:
         raise HTTPException(
@@ -57,13 +55,11 @@ async def proxy_llm_request(
             detail="X-LLM-API-Key header required for proxy mode",
         )
 
-    # Parse request body
     try:
         body = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
-    # Extract prompt from provider-specific format
     proxy_engine = request.app.state.proxy_engine
     prompt = proxy_engine.extract_prompt(provider, body)
 
@@ -73,12 +69,10 @@ async def proxy_llm_request(
             detail="Could not extract prompt from request body",
         )
 
-    # ── Run classifier pipeline ──────────────────────────────
     pipeline = request.app.state.pipeline
     app_ctx = key_doc.get("app_context", "general")
     canary_token = key_doc.get("custom_canary", None)
 
-    # Capture session and client identity (never store raw prompt)
     import uuid as _uuid
     session_id = request.headers.get("X-Session-ID") or str(_uuid.uuid4())
     client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
@@ -141,17 +135,14 @@ async def proxy_llm_request(
             use_openai_moderation=key_doc.get("use_openai_moderation", False)
         )
 
-    # Extract model name from body
     model_name = body.get("model", None)
 
-    # Common firewall headers
     firewall_headers = {
         "X-Firewall-Safe": str(result.safe).lower(),
         "X-Firewall-Risk-Score": str(result.risk_score),
         "X-Firewall-Processing-Ms": str(result.processing_time_ms),
     }
 
-    # Log the request
     log_entry = {
         "request_id": result.request_id,
         "api_key_id": str(key_doc["_id"]),
@@ -182,7 +173,6 @@ async def proxy_llm_request(
     except Exception as e:
         logger.error(f"Failed to log proxy result: {e}")
 
-    # Update key stats
     try:
         update = {
             "$inc": {"total_checks": 1, "monthly_usage": 1},
@@ -196,7 +186,6 @@ async def proxy_llm_request(
     except Exception as e:
         logger.error(f"Failed to update key stats: {e}")
 
-    # ── BLOCK if flagged ─────────────────────────────────────
     if not result.safe:
         logger.warning(
             f"BLOCKED {provider} request: {result.attack_type} "
@@ -221,7 +210,6 @@ async def proxy_llm_request(
             headers=firewall_headers,
         )
 
-    # ── FORWARD if safe ──────────────────────────────────────
     try:
         is_stream = body.get("stream", False)
 

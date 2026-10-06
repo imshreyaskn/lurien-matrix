@@ -32,7 +32,12 @@ export default function Signup() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError(err.detail || 'SYSTEM_ERROR: Credential generation failed.');
+      const msg = err?.status === 408 || err?.error === 'Request timeout'
+        ? 'GATEWAY TIMEOUT: Server is waking up. Please retry in a few seconds.'
+        : err?.status === 429
+        ? (err?.detail || 'RATE LIMIT EXCEEDED: Too many attempts. Please wait 60s.')
+        : (err?.detail || err?.error || err?.message || 'SYSTEM_ERROR: Credential generation failed.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

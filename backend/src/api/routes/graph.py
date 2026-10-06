@@ -61,15 +61,14 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
     
     try:
         async with driver.session() as session:
-            # Query 1: Force Graph Data (API Key -> Attack Type)
-            q1 = """
+            force_graph_query = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
             WHERE k.key_id IN $allowed_keys
             WITH k, a, COUNT(*) as weight
             RETURN k.key_id AS source, a.name AS target, weight
             ORDER BY weight DESC LIMIT 50
             """
-            result1 = await session.run(q1, allowed_keys=allowed_keys)
+            result1 = await session.run(force_graph_query, allowed_keys=allowed_keys)
             async for record in result1:
                 source_id = str(record["source"])
                 co_occurrence.append({
@@ -78,8 +77,7 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "weight": record["weight"]
                 })
                 
-            # Query 2: Layer Bypass (attacks caught by ML, missing rule/heuristic)
-            q2 = """
+            layer_bypass_query = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
             WHERE k.key_id IN $allowed_keys
             WITH a, COLLECT(DISTINCT l.name) AS layers
@@ -87,21 +85,20 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
             RETURN a.name AS attack_type, SIZE(layers) AS caught_by_ml_only 
             ORDER BY caught_by_ml_only DESC LIMIT 10
             """
-            result2 = await session.run(q2, allowed_keys=allowed_keys)
+            result2 = await session.run(layer_bypass_query, allowed_keys=allowed_keys)
             async for record in result2:
                 layer_bypass.append({
                     "attack_type": record["attack_type"],
                     "caught_by_ml_only": record["caught_by_ml_only"]
                 })
                 
-            # Query 3: Top Replayed Hashes
-            q3 = """
+            top_replayed_hashes_query = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)<-[r:IS_ATTACK]-(h:PromptHash)
             WHERE k.key_id IN $allowed_keys AND r.times_seen >= 2
             RETURN DISTINCT h.hash AS hash, a.name AS attack_type, r.times_seen AS times_seen 
             ORDER BY times_seen DESC LIMIT 10
             """
-            result3 = await session.run(q3, allowed_keys=allowed_keys)
+            result3 = await session.run(top_replayed_hashes_query, allowed_keys=allowed_keys)
             async for record in result3:
                 top_replayed.append({
                     "hash": record["hash"],
@@ -109,14 +106,13 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "times_seen": record["times_seen"]
                 })
                 
-            # Query 4: API Key Breakdown
-            q4 = """
+            api_key_breakdown_query = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)
             WHERE k.key_id IN $allowed_keys
             RETURN k.key_id AS key_id, a.name AS attack_type, COUNT(a) AS attack_count
             ORDER BY attack_count DESC
             """
-            result4 = await session.run(q4, allowed_keys=allowed_keys)
+            result4 = await session.run(api_key_breakdown_query, allowed_keys=allowed_keys)
             async for record in result4:
                 key_id = str(record["key_id"])
                 provider_targeting.append({
@@ -125,14 +121,13 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "attack_count": record["attack_count"]
                 })
 
-            # Query 5: Three-stage flow (ApiKey -> AttackType -> FlaggedLayer)
-            q5 = """
+            three_stage_flow_query = """
             MATCH (k:ApiKey)-[t:TRIGGERED]->(a:AttackType)-[:CAUGHT_BY]->(l:FlaggedLayer)
             WHERE k.key_id IN $allowed_keys
             RETURN k.key_id AS api_key, a.name AS attack_type, l.name AS flagged_layer, t.count AS weight
             ORDER BY weight DESC LIMIT 100
             """
-            result5 = await session.run(q5, allowed_keys=allowed_keys)
+            result5 = await session.run(three_stage_flow_query, allowed_keys=allowed_keys)
             async for record in result5:
                 kid = str(record["api_key"])
                 flow_data.append({
@@ -142,15 +137,14 @@ async def get_graph_stats(current_user: dict = Depends(validate_user_token)):
                     "weight": record["weight"] or 1
                 })
             
-            # Query 6: Replay counts per attack type
-            q6 = """
+            replay_counts_per_attack_query = """
             MATCH (k:ApiKey)-[:TRIGGERED]->(a:AttackType)<-[r:IS_ATTACK]-(h:PromptHash)
             WHERE k.key_id IN $allowed_keys AND r.times_seen >= 2
             WITH DISTINCT a.name AS attack_type, h.hash AS h_hash
             WITH attack_type, COUNT(h_hash) AS replay_count
             RETURN attack_type, replay_count
             """
-            result6 = await session.run(q6, allowed_keys=allowed_keys)
+            result6 = await session.run(replay_counts_per_attack_query, allowed_keys=allowed_keys)
             async for record in result6:
                 replay_counts[record["attack_type"]] = record["replay_count"]
                 
@@ -227,7 +221,6 @@ async def get_session_chains(current_user: dict = Depends(validate_user_token)):
     """
     logs = mongo.get_logs_collection()
     
-    # We find sessions that have at least one blocked request, or sort by most requests
     pipeline = [
         {"$match": {"user_id": current_user["_id"]}},
         {
@@ -247,7 +240,6 @@ async def get_session_chains(current_user: dict = Depends(validate_user_token)):
                 }
             }
         },
-        # Calculate threat score: (blocked / total) * max_risk
         {
             "$addFields": {
                 "threat_score": {
@@ -264,7 +256,6 @@ async def get_session_chains(current_user: dict = Depends(validate_user_token)):
     
     sessions = []
     async for doc in logs.aggregate(pipeline):
-        # Format timestamps
         for ev in doc["events"]:
             ev["timestamp"] = ev["timestamp"].isoformat()
         sessions.append({

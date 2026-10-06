@@ -52,16 +52,13 @@ async def create_api_key(
         "use_openai_moderation": body.use_openai_moderation,
     }
 
-    # Insert initially to generate ID
     result = await mongo.get_keys_collection().insert_one(key_doc)
     key_id_str = str(result.inserted_id)
 
-    # If custom intent examples are provided, register and override app_context to the generated key_id
     if body.custom_intent_examples:
         pipeline = request.app.state.pipeline
         try:
             pipeline.policy.register_custom_profile(key_id_str, body.custom_intent_examples)
-            # Update key in DB to have app_context point to this profile name
             await mongo.get_keys_collection().update_one(
                 {"_id": result.inserted_id},
                 {"$set": {"app_context": key_id_str}}

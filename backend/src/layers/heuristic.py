@@ -104,7 +104,6 @@ class HeuristicLayer:
         words = text_lower.split()
         word_count = len(words)
 
-        # Compute all 6 signals
         signals = HeuristicSignals(
             instruction_density=self._instruction_density(words, word_count),
             length_anomaly=self._length_anomaly(word_count),
@@ -114,7 +113,6 @@ class HeuristicLayer:
             repetition_score=self._repetition(words),
         )
 
-        # Weighted composite score
         score = (
             signals.instruction_density * self.weights["instruction_density"]
             + signals.length_anomaly * self.weights["length_anomaly"]

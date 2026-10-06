@@ -55,7 +55,6 @@ class EmbeddingSimilarityLayer:
         )
         embedding = np.array(embedding).astype("float32")
 
-        # k=5 nearest neighbors
         similarities, indices = self.index.search(embedding, k=5)
         top_similarity = float(similarities[0][0])
         top_idx        = int(indices[0][0])

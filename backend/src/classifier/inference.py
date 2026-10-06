@@ -130,7 +130,6 @@ class InjectionClassifier:
         try:
             import torch
 
-            # Tokenize
             inputs = self.tokenizer(
                 text,
                 truncation=True,
@@ -141,11 +140,9 @@ class InjectionClassifier:
             if self.device != "cpu":
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-            # Inference
             with torch.no_grad():
                 logits = self.model(**inputs).logits
 
-            # Check timeout
             elapsed = _elapsed_ms(start)
             if elapsed > self.timeout_ms:
                 return MLResult(
@@ -156,7 +153,6 @@ class InjectionClassifier:
                     latency_ms=elapsed,
                 )
 
-            # Softmax probabilities
             probs = torch.softmax(logits, dim=-1).squeeze()
             label_idx = probs.argmax().item()
             confidence = round(probs[label_idx].item(), 4)

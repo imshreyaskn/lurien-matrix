@@ -196,23 +196,19 @@ def main():
     print("LLM Firewall — DistilBERT Fine-Tuning")
     print("=" * 60)
 
-    # Check device
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
     if device == "cuda":
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
-    # Load tokenizer
     print("\nLoading tokenizer...")
     tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_CHECKPOINT)
 
-    # Prepare dataset
     print("\nPreparing dataset...")
     dataset = prepare_dataset()
     print(f"Train: {len(dataset['train'])} samples")
     print(f"Test:  {len(dataset['test'])} samples")
 
-    # Tokenize
     def tokenize(examples):
         return tokenizer(
             examples["text"],
@@ -223,7 +219,6 @@ def main():
 
     tokenized = dataset.map(tokenize, batched=True)
 
-    # Load model
     print("\nLoading DistilBERT...")
     model = DistilBertForSequenceClassification.from_pretrained(
         MODEL_CHECKPOINT,
@@ -232,7 +227,6 @@ def main():
         label2id={label: i for i, label in enumerate(LABELS)},
     )
 
-    # Training arguments
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
         num_train_epochs=5,
@@ -251,7 +245,6 @@ def main():
         save_total_limit=2,
     )
 
-    # Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -260,13 +253,11 @@ def main():
         compute_metrics=compute_metrics,
     )
 
-    # Train
     print("\n" + "=" * 60)
     print("Starting training...")
     print("=" * 60)
     trainer.train()
 
-    # Evaluate
     print("\n" + "=" * 60)
     print("Evaluation Results")
     print("=" * 60)
@@ -274,7 +265,6 @@ def main():
     print(f"Accuracy: {results['eval_accuracy']:.4f}")
     print(f"F1 Macro: {results['eval_f1_macro']:.4f}")
 
-    # Save model and tokenizer
     print(f"\nSaving model to {OUTPUT_DIR}...")
     trainer.save_model(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)

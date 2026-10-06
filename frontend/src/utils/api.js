@@ -18,7 +18,7 @@ async function apiFetch(path, options = {}, retries = 1) {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for cloud cold starts
 
   try {
     const response = await fetch(url, { ...options, headers, signal: controller.signal });
@@ -33,7 +33,7 @@ async function apiFetch(path, options = {}, retries = 1) {
   } catch (error) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
-      throw { status: 408, error: 'Request timeout' };
+      throw { status: 408, error: 'Request timeout', detail: 'Connection timed out. The server may be waking up; please retry.' };
     }
     // Retry on network errors or 5xx
     if ((!error.status || error.status >= 500) && retries > 0) {
@@ -41,12 +41,14 @@ async function apiFetch(path, options = {}, retries = 1) {
       await new Promise(r => setTimeout(r, 1000));
       return apiFetch(path, options, retries - 1);
     }
+    if (!error.status && error.message) {
+      throw { status: 0, error: 'Network error', detail: 'Unable to reach the firewall gateway. Please check connection and retry.' };
+    }
     throw error;
   }
 }
 
 export const api = {
-  // Check endpoints
   check: (prompt, threshold, app_context, custom_canary, keyId = null) =>
     apiFetch('/v1/check', {
       method: 'POST',
@@ -60,7 +62,6 @@ export const api = {
       body: JSON.stringify({ prompts }),
     }),
 
-  // Dashboard
   getStats: () => apiFetch('/v1/stats'),
   getGraphStats: () => apiFetch('/v1/graph/stats'),
   getThreatVelocity: () => apiFetch('/v1/graph/velocity'),
@@ -78,7 +79,6 @@ export const api = {
 
   getLogDetail: (requestId) => apiFetch(`/v1/logs/${requestId}`),
 
-  // Keys
   createKey: (name, app_context, custom_canary, custom_intent_examples, use_openai_moderation) =>
     apiFetch('/v1/keys', {
       method: 'POST',
@@ -90,7 +90,6 @@ export const api = {
   revokeKey: (keyId) =>
     apiFetch(`/v1/keys/${keyId}`, { method: 'DELETE' }),
 
-  // Auth
   login: (email, password) =>
     apiFetch('/v1/auth/login', {
       method: 'POST',
@@ -105,6 +104,5 @@ export const api = {
 
   getMe: () => apiFetch('/v1/auth/me'),
 
-  // Health
   health: () => apiFetch('/health'),
 };

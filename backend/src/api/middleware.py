@@ -40,11 +40,9 @@ async def validate_api_key(
     if not api_key:
         raise HTTPException(status_code=401, detail="API key required")
 
-    # Validate format
     if not api_key.startswith("fw_live_") or len(api_key) != 72:
         raise HTTPException(status_code=401, detail="Invalid API key format")
 
-    # Look up in database
     key_hash = hash_api_key(api_key)
     keys_collection = mongo.get_keys_collection()
     
@@ -56,7 +54,6 @@ async def validate_api_key(
     if not key_doc.get("is_active", False):
         raise HTTPException(status_code=401, detail="API key has been revoked")
 
-    # Check rate limits
     rate_status = await redis_db.check_rate_limit(
         api_key_id=str(key_doc["_id"])
     )
@@ -77,7 +74,6 @@ async def validate_api_key(
             },
         )
 
-    # Attach rate limit info for response headers
     request.state.rate_limit = rate_status
     request.state.api_key_doc = key_doc
 

@@ -79,24 +79,21 @@ PATTERNS: dict[str, list[tuple[str, str]]] = {
     ],
 }
 
-# Pre-compile all patterns for performance
 COMPILED_PATTERNS: dict[str, list[tuple[re.Pattern, str]]] = {
     category: [(re.compile(pattern, re.IGNORECASE | re.DOTALL), desc) for pattern, desc in patterns]
     for category, patterns in PATTERNS.items()
 }
 
-# Case-sensitive patterns (e.g., "DAN" acronym)
 CASE_SENSITIVE_PATTERNS = [
     (re.compile(r"\bDAN\b"), "DAN", "PERSONA_HIJACKING"),
     (re.compile(r"\bAIM\b"), "AIM", "PERSONA_HIJACKING"),
 ]
 
-# Reversed injection phrases to catch reverse-text attacks
 REVERSED_PHRASES = [
-    "snoitcurtsni suoiverp erongi",  # ignore previous instructions
-    "tpmorp metsys",                  # system prompt
-    "edom detcirtsernu",              # unrestricted mode
-    "kaerblaj",                       # jailbreak
+    "snoitcurtsni suoiverp erongi",
+    "tpmorp metsys",
+    "edom detcirtsernu",
+    "kaerblaj",
 ]
 
 
@@ -215,5 +212,4 @@ class RuleBasedLayer:
 
 
 def _elapsed_ms(start: float) -> float:
-    """Calculate elapsed milliseconds from a perf_counter start."""
     return round((time.perf_counter() - start) * 1000, 2)
