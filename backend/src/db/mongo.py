@@ -18,22 +18,23 @@ _db: Optional[AsyncIOMotorDatabase] = None
 
 
 async def connect(uri: str, db_name: str = "llm_firewall") -> AsyncIOMotorDatabase:
-    """Connect to MongoDB and return the database instance."""
+    """Connect to MongoDB and return the database instance with retries."""
     global _client, _db
-    try:
-        _client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
-        # Verify connection
-        await _client.admin.command("ping")
-        _db = _client[db_name]
-        
-        # Create indexes
-        await _create_indexes(_db)
-        
-        logger.info(f"Connected to MongoDB: {db_name}")
-        return _db
-    except Exception as e:
-        logger.error(f"MongoDB connection failed: {e}")
-        raise
+    import asyncio
+    for attempt in range(3):
+        try:
+            _client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=15000)
+            await _client.admin.command("ping")
+            _db = _client[db_name]
+            await _create_indexes(_db)
+            logger.info(f"Connected to MongoDB: {db_name}")
+            return _db
+        except Exception as e:
+            logger.warning(f"MongoDB connection attempt {attempt + 1}/3 failed: {e}")
+            if attempt == 2:
+                logger.error(f"MongoDB connection permanently failed: {e}")
+                raise
+            await asyncio.sleep(2)
 
 
 async def _create_indexes(db: AsyncIOMotorDatabase) -> None:
