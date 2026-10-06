@@ -1,9 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-/**
- * Poll an async function at a fixed interval.
- * Returns { data, error, loading, refresh }.
- */
 export function usePolling(fetchFn, intervalMs = 3000, enabled = true) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);

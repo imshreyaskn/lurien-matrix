@@ -25,7 +25,6 @@ logger = logging.getLogger("llm_firewall.proxy")
 # ── Prompt Extractors ─────────────────────────────────────────
 
 def extract_openai_prompt(body: dict) -> Optional[str]:
-    """Extract prompt from OpenAI/Groq chat completions format."""
     try:
         messages = body.get("messages", [])
         if not messages:
@@ -41,7 +40,6 @@ def extract_openai_prompt(body: dict) -> Optional[str]:
 
 
 def extract_gemini_prompt(body: dict) -> Optional[str]:
-    """Extract prompt from Gemini generateContent format."""
     try:
         contents = body.get("contents", [])
         if not contents:
@@ -56,7 +54,6 @@ def extract_gemini_prompt(body: dict) -> Optional[str]:
 
 
 def extract_anthropic_prompt(body: dict) -> Optional[str]:
-    """Extract prompt from Anthropic messages format."""
     try:
         messages = body.get("messages", [])
         if not messages:
@@ -213,11 +210,9 @@ class ProxyEngine:
         )
 
     async def close(self):
-        """Close the HTTP client."""
         await self._client.aclose()
 
     def get_provider_config(self, provider: str) -> Optional[dict]:
-        """Get configuration for a supported provider."""
         return PROVIDERS.get(provider)
 
     def extract_prompt(self, provider: str, body: dict) -> Optional[str]:

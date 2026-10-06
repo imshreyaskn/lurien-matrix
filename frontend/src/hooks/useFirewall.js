@@ -1,9 +1,6 @@
 import { useCallback } from 'react';
 import { api } from '../utils/api';
 
-/**
- * Hook wrapping all firewall API calls.
- */
 export function useFirewall() {
   const checkPrompt = useCallback(async (prompt, threshold) => {
     return api.check(prompt, threshold);

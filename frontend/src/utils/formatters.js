@@ -1,14 +1,8 @@
-/**
- * Format a risk score to a percentage string.
- */
 export function formatRiskScore(score) {
   if (score === null || score === undefined || isNaN(score)) return '—';
   return `${(score * 100).toFixed(1)}%`;
 }
 
-/**
- * Format milliseconds to a human-readable string.
- */
 export function formatMs(ms) {
   if (ms === null || ms === undefined) return '—';
   if (ms < 1) return '<1ms';
@@ -16,17 +10,11 @@ export function formatMs(ms) {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-/**
- * Format a large number with commas.
- */
 export function formatNumber(num) {
   if (num === null || num === undefined) return '0';
   return num.toLocaleString();
 }
 
-/**
- * Format an ISO timestamp to a local time string.
- */
 export function formatTime(iso) {
   if (!iso) return '—';
   const date = new Date(iso);
@@ -37,9 +25,6 @@ export function formatTime(iso) {
   });
 }
 
-/**
- * Format an ISO timestamp to a local date+time string.
- */
 export function formatDateTime(iso) {
   if (!iso) return '—';
   const date = new Date(iso);
@@ -52,18 +37,12 @@ export function formatDateTime(iso) {
   });
 }
 
-/**
- * Truncate a string and add ellipsis.
- */
 export function truncate(str, maxLen = 30) {
   if (!str) return '—';
   if (str.length <= maxLen) return str;
   return str.slice(0, maxLen) + '…';
 }
 
-/**
- * Get color class based on risk score.
- */
 export function getRiskColor(score, isBlocked = false) {
   if (isBlocked) return 'text-status-blocked';
   if (score === null || score === undefined || isNaN(score)) return 'text-luma-500';
@@ -72,9 +51,6 @@ export function getRiskColor(score, isBlocked = false) {
   return 'text-status-safe';
 }
 
-/**
- * Get background color class based on risk score.
- */
 export function getRiskBg(score, isBlocked = false) {
   if (isBlocked) return 'bg-firewall-red/10 border-firewall-red text-status-blocked';
   if (score === null || score === undefined || isNaN(score)) return 'bg-luma-100 border-luma-300 text-luma-500';
@@ -83,9 +59,6 @@ export function getRiskBg(score, isBlocked = false) {
   return 'bg-firewall-green/10 border-firewall-green text-status-safe';
 }
 
-/**
- * Map attack type to a human-readable label.
- */
 export function formatAttackType(type) {
   if (!type) return '—';
   const t = String(type);
@@ -156,9 +129,6 @@ export function getAttackColor(type) {
   return map[t.toLowerCase()] || THREAT.muted;
 }
 
-/**
- * Time ago string.
- */
 export function timeAgo(iso) {
   if (!iso) return '—';
   const timestamp = new Date(iso).getTime();

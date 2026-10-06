@@ -12,6 +12,16 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const getErrorMessage = (err, fallback) => {
+    if (err?.status === 408 || err?.error === 'Request timeout') {
+      return 'GATEWAY TIMEOUT: Server is waking up. Please retry in a few seconds.';
+    }
+    if (err?.status === 429) {
+      return err?.detail || 'RATE LIMIT EXCEEDED: Too many attempts. Please wait 60s.';
+    }
+    return err?.detail || err?.error || err?.message || fallback;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -21,7 +31,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.detail || 'ACCESS DENIED: Invalid identity or passcode.');
+      setError(getErrorMessage(err, 'ACCESS DENIED: Invalid identity or passcode.'));
     } finally {
       setLoading(false);
     }
@@ -34,7 +44,7 @@ export default function Login() {
       await login('demo@lurien.ai', 'demo1234');
       navigate('/');
     } catch (err) {
-      setError(err.detail || 'ACCESS DENIED: Demo authentication failed.');
+      setError(getErrorMessage(err, 'ACCESS DENIED: Demo authentication failed.'));
     } finally {
       setLoading(false);
     }

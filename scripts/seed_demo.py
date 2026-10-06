@@ -197,7 +197,6 @@ async def seed():
 
     print("[OK] Connected to MongoDB.")
 
-    # -- Wipe existing demo data ------------------------------------------------
     existing_user = await db.users.find_one({"email": DEMO_EMAIL})
     if existing_user:
         uid = existing_user["_id"]
@@ -206,7 +205,6 @@ async def seed():
         await db.users.delete_one({"_id": uid})
         print("[OK] Wiped existing demo account.")
 
-    # -- Create demo user -------------------------------------------------------
     now = datetime.now(timezone.utc)
     user_doc = {
         "email": DEMO_EMAIL,
@@ -217,7 +215,6 @@ async def seed():
     user_id = result.inserted_id
     print(f"[OK] Created demo user: {DEMO_EMAIL} / {DEMO_PASSWORD}  (id={user_id})")
 
-    # -- Create API keys --------------------------------------------------------
     key_ids = []
     for cfg in KEY_CONFIGS:
         raw = generate_api_key()
@@ -241,7 +238,6 @@ async def seed():
         key_ids.append(r.inserted_id)
         print(f"  Key: {cfg['name']} -> {raw[:28]}...")
 
-    # -- Generate logs ----------------------------------------------------------
     # ~300 logs over 30 days: 65% safe, 35% blocked -- realistic for a monitored prod env
     logs = []
     now_base = datetime.now(timezone.utc)
@@ -260,7 +256,6 @@ async def seed():
     await db.firewall_logs.insert_many(logs)
     print(f"[OK] Inserted {len(logs)} firewall logs.")
 
-    # -- Patch key counters to match logs --------------------------------------
     for kid in key_ids:
         total = sum(1 for l in logs if l["api_key_id"] == str(kid))
         blocked = sum(1 for l in logs if l["api_key_id"] == str(kid) and not l["safe"])

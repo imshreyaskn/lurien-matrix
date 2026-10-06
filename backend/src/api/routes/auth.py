@@ -10,8 +10,14 @@ from src.api.schemas import UserCreate, UserLogin, TokenResponse, UserResponse
 from src.db import mongo, redis
 from src.api.auth_middleware import create_access_token, validate_user_token
 
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 async def check_auth_rate_limit(request: Request):
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_ip(request)
     r = redis.get_redis()
     if r:
         key = f"rate:auth:{client_ip}"
@@ -20,7 +26,7 @@ async def check_auth_rate_limit(request: Request):
             pipe.expire(key, 60, nx=True)
             results = await pipe.execute()
             count = results[0]
-        if count > 5:
+        if count > 15:
             raise HTTPException(status_code=429, detail="Too many authentication attempts. Please try again in a minute.")
 
 async def log_auth_event(event_type: str, email: str, ip: str, success: bool):
@@ -54,10 +60,10 @@ def get_password_hash(password: str) -> str:
 async def signup(request: Request, user_data: UserCreate, _: None = Depends(check_auth_rate_limit)):
     users = mongo.get_users_collection()
     
-    # Check if user already exists
+    ip = get_client_ip(request)
     existing_user = await users.find_one({"email": user_data.email})
     if existing_user:
-        await log_auth_event("signup", user_data.email, request.client.host if request.client else "unknown", False)
+        await log_auth_event("signup", user_data.email, ip, False)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -73,7 +79,7 @@ async def signup(request: Request, user_data: UserCreate, _: None = Depends(chec
     }
     
     result = await users.insert_one(user_doc)
-    await log_auth_event("signup", user_data.email, request.client.host if request.client else "unknown", True)
+    await log_auth_event("signup", user_data.email, ip, True)
     
     return UserResponse(
         id=str(result.inserted_id),
@@ -85,10 +91,11 @@ async def signup(request: Request, user_data: UserCreate, _: None = Depends(chec
 @router.post("/login", response_model=TokenResponse)
 async def login(request: Request, user_data: UserLogin, _: None = Depends(check_auth_rate_limit)):
     users = mongo.get_users_collection()
+    ip = get_client_ip(request)
     
     user = await users.find_one({"email": user_data.email})
     if not user:
-        await log_auth_event("login", user_data.email, request.client.host if request.client else "unknown", False)
+        await log_auth_event("login", user_data.email, ip, False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -96,7 +103,7 @@ async def login(request: Request, user_data: UserLogin, _: None = Depends(check_
         )
         
     if not verify_password(user_data.password, user["hashed_password"]):
-        await log_auth_event("login", user_data.email, request.client.host if request.client else "unknown", False)
+        await log_auth_event("login", user_data.email, ip, False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -104,7 +111,7 @@ async def login(request: Request, user_data: UserLogin, _: None = Depends(check_
         )
         
     access_token = create_access_token(data={"sub": str(user["_id"])})
-    await log_auth_event("login", user_data.email, request.client.host if request.client else "unknown", True)
+    await log_auth_event("login", user_data.email, ip, True)
     
     return TokenResponse(
         access_token=access_token,

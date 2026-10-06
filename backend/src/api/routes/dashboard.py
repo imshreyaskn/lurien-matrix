@@ -34,16 +34,13 @@ async def get_stats(current_user: dict = Depends(validate_user_token)):
 
     user_filter = {"user_id": current_user["_id"]}
 
-    # Total counts
     total_checks = await logs.count_documents(user_filter)
     flagged_count = await logs.count_documents({**user_filter, "safe": False})
     blocked_count = await logs.count_documents({**user_filter, "blocked": True})
 
-    # Today counts
     requests_today = await logs.count_documents({**user_filter, "timestamp": {"$gte": today_start}})
     requests_this_month = await logs.count_documents({**user_filter, "timestamp": {"$gte": month_start}})
 
-    # Attack breakdown
     attack_pipeline = [
         {"$match": {**user_filter, "safe": False, "attack_type": {"$ne": None}}},
         {"$group": {"_id": "$attack_type", "count": {"$sum": 1}}},
@@ -52,7 +49,6 @@ async def get_stats(current_user: dict = Depends(validate_user_token)):
     async for doc in logs.aggregate(attack_pipeline):
         attack_breakdown[doc["_id"]] = doc["count"]
 
-    # Average processing time
     avg_pipeline = [
         {"$match": user_filter},
         {"$group": {"_id": None, "avg_time": {"$avg": "$processing_time_ms"}}},
@@ -61,7 +57,6 @@ async def get_stats(current_user: dict = Depends(validate_user_token)):
     async for doc in logs.aggregate(avg_pipeline):
         avg_time = round(doc.get("avg_time", 0.0), 2)
 
-    # Top flagged patterns
     pattern_pipeline = [
         {"$match": {**user_filter, "flagged_pattern": {"$ne": None}}},
         {"$group": {"_id": "$flagged_pattern", "count": {"$sum": 1}}},
@@ -72,7 +67,6 @@ async def get_stats(current_user: dict = Depends(validate_user_token)):
     async for doc in logs.aggregate(pattern_pipeline):
         top_patterns.append({"pattern": doc["_id"], "count": doc["count"]})
 
-    # Layer effectiveness
     layer_pipeline = [
         {"$match": {**user_filter, "safe": False, "flagged_layer": {"$ne": None}}},
         {"$group": {"_id": "$flagged_layer", "count": {"$sum": 1}}},
@@ -161,7 +155,6 @@ async def get_stats(current_user: dict = Depends(validate_user_token)):
         }
     ]
     
-    # Initialize 7x24 grid with 0
     heatmap_data = [{"day": d, "hour": h, "count": 0} for d in range(7) for h in range(24)]
     
     async for doc in logs.aggregate(heatmap_pipeline):
@@ -243,7 +236,6 @@ async def get_logs(
     """Get paginated log entries with filters."""
     logs = mongo.get_logs_collection()
 
-    # Build filter
     query: dict = {"user_id": current_user["_id"]}
     if flagged_only:
         query["safe"] = False
@@ -266,7 +258,6 @@ async def get_logs(
         except ValueError:
             pass
 
-    # Paginate
     skip = (page - 1) * limit
     total = await logs.count_documents(query)
     cursor = logs.find(query).sort("timestamp", -1).skip(skip).limit(limit)

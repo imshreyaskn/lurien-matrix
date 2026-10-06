@@ -7,7 +7,6 @@ from sentence_transformers import SentenceTransformer
 
 MODEL = "all-MiniLM-L6-v2"
 
-# Detect absolute paths based on this script location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.dirname(SCRIPT_DIR)
 OUT_DIR = os.path.join(BACKEND_DIR, "data", "faiss")
@@ -17,7 +16,6 @@ os.makedirs(OUT_DIR, exist_ok=True)
 print(f"Backend directory: {BACKEND_DIR}")
 print(f"Output directory: {OUT_DIR}")
 
-# Initialize model
 print(f"Loading SentenceTransformer: {MODEL}...")
 model = SentenceTransformer(MODEL)
 
@@ -29,7 +27,6 @@ except Exception as e:
     print(f"Failed to load JSON: {e}")
     exit(1)
 
-# Deduplicate just in case
 attack_texts = list(set(attack_texts))
 print(f"Total deduplicated attack prompts to encode: {len(attack_texts)}")
 
@@ -39,7 +36,6 @@ if not attack_texts:
 
 print(f"Building FAISS index from {len(attack_texts)} attack prompts...")
 
-# Encode all attack prompts (normalize for cosine similarity)
 embeddings = model.encode(
     attack_texts,
     batch_size=256,
@@ -55,7 +51,6 @@ d = embeddings.shape[1]
 index = faiss.IndexFlatIP(d)
 index.add(embeddings)
 
-# Save the index and the corresponding texts
 faiss_path = os.path.join(OUT_DIR, "attack_index.faiss")
 texts_path = os.path.join(OUT_DIR, "attack_texts.pkl")
 

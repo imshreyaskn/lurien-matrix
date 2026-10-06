@@ -15,7 +15,6 @@ function createProxyClient(fwInstance) {
     throw new Error("llmApiKey must be specified for proxy mode");
   }
 
-  // Returns a drop-in client mimic
   if (provider === 'openai' || provider === 'groq') {
     return {
       chat: {
@@ -50,9 +49,7 @@ function createProxyClient(fwInstance) {
               throw new Error(`LLM Firewall Proxy Error (${response.status}): ${errBody}`);
             }
 
-            // Return standard client format
             if (body.stream) {
-              // Return readable stream
               return response.body;
             }
             return response.json();
@@ -62,7 +59,6 @@ function createProxyClient(fwInstance) {
     };
   }
 
-  // Handle Anthropic drop-in client shape
   if (provider === 'anthropic') {
     return {
       messages: {
@@ -105,7 +101,6 @@ function createProxyClient(fwInstance) {
     };
   }
 
-  // Handle Gemini
   if (provider === 'gemini') {
     return {
       generateContent: async (body) => {
