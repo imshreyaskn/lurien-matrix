@@ -1,9 +1,9 @@
 """
-ML Classifier — DistilBERT Inference (Layer 3)
-Target latency: <100ms on CPU
+Local ONNX sequence-classifier inference (Layer 4).
 
-Fine-tuned DistilBertForSequenceClassification for 7-class
-prompt injection detection. Runs locally — never calls an external API.
+The deployed model configuration and the checked-in training script must be
+kept in sync. This module loads the model artifact specified by model_path;
+it does not by itself establish the model's training provenance or accuracy.
 """
 
 import time
