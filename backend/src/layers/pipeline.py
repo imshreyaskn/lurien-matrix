@@ -184,7 +184,10 @@ class ClassifierPipeline:
         # Note: pipeline.py uses 0.65 threshold override for Layer 2 Heuristic triggers
         heuristic_res = self.heuristic.analyze(text)
         current_risk = update_risk(heuristic_res.score)
-        is_heur_triggered = heuristic_res.triggered or (current_risk >= threshold)
+        # Use the request's configured cumulative-risk threshold consistently.
+        # HeuristicLayer's legacy fixed 0.65 flag must not override a caller's
+        # threshold or silently make the effective threshold lower.
+        is_heur_triggered = current_risk >= threshold
         layers_data["heuristic"] = {
             "ran": True,
             "triggered": is_heur_triggered,
