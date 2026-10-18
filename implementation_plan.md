@@ -19,22 +19,22 @@ None. The requirements are clear and align perfectly with security best practice
 
 ### Backend
 
-#### [MODIFY] [middleware.py](file:///e:/Drizzle/VS/firewall/backend/src/api/middleware.py)
+#### [MODIFY] [middleware.py](backend/src/api/middleware.py)
 - Create a new dependency `resolve_api_key(request, x_api_key, x_dashboard_key_id, authorization)`
 - If `x_api_key` is present, use the existing hash-based validation.
 - If `x_dashboard_key_id` is present, validate the JWT token from the `Authorization` header, look up the key by `ObjectId(x_dashboard_key_id)`, and ensure its `user_id` matches the authenticated user.
 - Apply rate limiting appropriately to the resolved `key_doc`.
 
-#### [MODIFY] [check.py](file:///e:/Drizzle/VS/firewall/backend/src/api/routes/check.py)
+#### [MODIFY] [check.py](backend/src/api/routes/check.py)
 - Update `/v1/check` and `/v1/check/batch` to use `Depends(resolve_api_key)` instead of `validate_api_key`.
 
 ### Frontend
 
-#### [MODIFY] [api.js](file:///e:/Drizzle/VS/firewall/frontend/src/utils/api.js)
+#### [MODIFY] [api.js](frontend/src/utils/api.js)
 - Update `api.check` to accept `keyId` instead of `apiKey`.
 - If `keyId` is provided, send it in the `X-Dashboard-Key-ID` header instead of `X-API-Key`.
 
-#### [MODIFY] [LiveTestWidget.jsx](file:///e:/Drizzle/VS/firewall/frontend/src/components/LiveTestWidget.jsx)
+#### [MODIFY] [LiveTestWidget.jsx](frontend/src/components/LiveTestWidget.jsx)
 - Revert the API KEY OVERRIDE text input back to a `<select>` dropdown.
 - Populate the dropdown with the names of the user's API keys (fetched from `listKeys()`).
 - When testing, pass the selected `key_id` to `api.check`.
