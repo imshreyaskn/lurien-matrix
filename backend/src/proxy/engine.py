@@ -42,22 +42,49 @@ def _collect_text(value) -> list[str]:
     return fragments
 
 
+def _collect_text(value) -> list[str]:
+    """Collect text from provider message/content/tool result structures."""
+    fragments: list[str] = []
+    if isinstance(value, str):
+        if value.strip():
+            fragments.append(value)
+    elif isinstance(value, list):
+        for item in value:
+            fragments.extend(_collect_text(item))
+    elif isinstance(value, dict):
+        # Only inspect known text-bearing fields to avoid serializing arbitrary metadata.
+        for key in (
+            "text", "content", "parts", "functionResponse", "functionCall",
+            "arguments", "args", "output", "tool_calls", "result"
+        ):
+            if key in value:
+                fragments.extend(_collect_text(value[key]))
+    return fragments
+
+
 def extract_openai_prompt(body: dict) -> Optional[str]:
-    """Inspect all conversation messages, including tool outputs and text blocks."""
+    """Inspect untrusted conversation content while excluding trusted system instructions."""
     messages = body.get("messages")
     if not isinstance(messages, list) or not messages:
         return None
     fragments: list[str] = []
     for message in messages:
-        if isinstance(message, dict):
-            fragments.extend(_collect_text(message.get("content", "")))
-            fragments.extend(_collect_text(message.get("tool_calls", [])))
+        if not isinstance(message, dict):
+            continue
+        # System/developer messages are trusted configuration and may contain the
+        # configured canary by design. They must not trigger input-canary detection.
+        role = str(message.get("role", "")).lower()
+        if role in {"system", "developer"}:
+            continue
+        fragments.extend(_collect_text(message.get("content", "")))
+        # Tool arguments can be attacker-controlled and can carry injection payloads.
+        fragments.extend(_collect_text(message.get("tool_calls", [])))
     text = "\\n".join(fragments).strip()
     return text or None
 
 
 def extract_gemini_prompt(body: dict) -> Optional[str]:
-    """Inspect all Gemini contents/parts, including function responses."""
+    """Inspect Gemini contents/parts; systemInstruction is trusted configuration."""
     contents = body.get("contents")
     if not isinstance(contents, list) or not contents:
         return None
@@ -70,14 +97,18 @@ def extract_gemini_prompt(body: dict) -> Optional[str]:
 
 
 def extract_anthropic_prompt(body: dict) -> Optional[str]:
-    """Inspect all Anthropic messages, including tool-result blocks."""
+    """Inspect Anthropic messages and tool-result blocks, excluding top-level system text."""
     messages = body.get("messages")
     if not isinstance(messages, list) or not messages:
         return None
     fragments: list[str] = []
     for message in messages:
         if isinstance(message, dict):
+            role = str(message.get("role", "")).lower()
+            if role in {"system", "developer"}:
+                continue
             fragments.extend(_collect_text(message.get("content", "")))
+            fragments.extend(_collect_text(message.get("tool_calls", [])))
     text = "\\n".join(fragments).strip()
     return text or None
 
