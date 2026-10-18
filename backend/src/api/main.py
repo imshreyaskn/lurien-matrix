@@ -134,9 +134,9 @@ async def lifespan(app: FastAPI):
     # Load ML model (non-blocking — falls back to rule+heuristic if unavailable)
     model_loaded = pipeline.load_model()
     if model_loaded:
-        logger.info("✓ ML classifier loaded (DistilBERT)")
+        logger.info("✓ Local ONNX sequence classifier loaded")
     else:
-        logger.warning("⚠ ML classifier unavailable — using rule-based + heuristic only")
+        logger.warning("⚠ Local ONNX sequence classifier unavailable — check policy and heuristic fallbacks")
 
     # Load custom profiles from MongoDB to register them at startup
     try:
@@ -182,7 +182,7 @@ app = FastAPI(
         "A production-grade firewall proxy between applications and LLM APIs. "
         "Intercepts and blocks malicious prompts using a 6-layer detection pipeline: "
         "canary check, rule-based matching, heuristic analysis, embedding similarity, "
-        "fine-tuned DistilBERT classification, and context policy."
+        "local ONNX sequence classification, and context policy."
     ),
     version="1.0.0",
     lifespan=lifespan,
