@@ -55,7 +55,7 @@ def _collect_text(value) -> list[str]:
         # Only inspect known text-bearing fields to avoid serializing arbitrary metadata.
         for key in (
             "text", "content", "parts", "functionResponse", "functionCall",
-            "arguments", "args", "output", "tool_calls", "result"
+            "arguments", "args", "input", "response", "output", "tool_calls", "result"
         ):
             if key in value:
                 fragments.extend(_collect_text(value[key]))
