@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from datasets import load_dataset
 
-OUTPUT_PATH = Path(".benchmarks/data/benchmark_testset.json")
+OUTPUT_PATH = Path("benchmarks/data/benchmark_testset.json")
 
 # Import the original smoke test prompts from benchmark.py
 sys.path.insert(0, os.path.abspath("scripts"))

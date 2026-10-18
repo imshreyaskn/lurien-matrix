@@ -302,7 +302,7 @@ def main():
     parser.add_argument("--engine",      choices=["http", "local"], default="local", help="Execution engine (local or http)")
     parser.add_argument("--held-out",    action="store_true", help="Run full held-out test set benchmark with raw logs preservation")
     parser.add_argument("--save-raw",    action="store_true", help="Preserve raw predictions and metrics JSON/CSV")
-    parser.add_argument("--output-dir",  default=".benchmarks/results", help="Directory to save raw predictions")
+    parser.add_argument("--output-dir",  default="benchmarks/results", help="Directory to save raw predictions")
     args = parser.parse_args()
 
     if args.held_out or args.save_raw:

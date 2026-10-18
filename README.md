@@ -718,7 +718,7 @@ To establish generalization beyond the smoke test, the held-out suite incorporat
 
 ### Reproducing the Benchmarks & Raw Logs
 
-All raw predictions, per-layer outputs, and metrics are preserved under `.benchmarks/results/`:
+All raw predictions, per-layer outputs, and metrics are organized under [`benchmarks/results/`](file:///e:/Drizzle/VS/firewall/benchmarks/results/):
 
 ```bash
 # 1. Run full held-out benchmark with raw predictions preservation (JSON + CSV)
@@ -731,10 +731,11 @@ python scripts/run_comprehensive_benchmark.py --engine local --threshold 0.50
 python scripts/benchmark.py --engine local
 ```
 
-Raw artifacts generated:
-* `predictions_latest.json` & `predictions_latest.csv`: Full prediction record, risk scores, flagged layers, and latency per sample.
-* `metrics_latest.json`: Structured KPI metrics, confusion matrix, and category breakdowns.
-* `benchmark_report_latest.md`: Comprehensive Markdown report with failure analysis.
+Raw artifacts organized under `benchmarks/results/`:
+* [`predictions.json`](file:///e:/Drizzle/VS/firewall/benchmarks/results/predictions.json) & [`predictions.csv`](file:///e:/Drizzle/VS/firewall/benchmarks/results/predictions.csv): Full prediction record, risk scores, flagged layers, and latency per sample.
+* [`metrics.json`](file:///e:/Drizzle/VS/firewall/benchmarks/results/metrics.json): Structured KPI metrics, confusion matrix, and category breakdowns.
+* [`benchmark_report.md`](file:///e:/Drizzle/VS/firewall/benchmarks/results/benchmark_report.md): Comprehensive Markdown report with failure analysis.
+* [`benchmarks/README.md`](file:///e:/Drizzle/VS/firewall/benchmarks/README.md): Benchmark methodology, KPIs, and directory architecture.
 
 ---
 

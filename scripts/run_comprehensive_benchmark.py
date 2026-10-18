@@ -504,12 +504,12 @@ def generate_markdown_report(metrics: Dict[str, Any], output_path: Path):
 
 def main():
     parser = argparse.ArgumentParser(description="Lurien Matrix Comprehensive Benchmark Suite")
-    parser.add_argument("--dataset", default=".benchmarks/data/benchmark_testset.json", help="Path to testset JSON")
+    parser.add_argument("--dataset", default="benchmarks/data/benchmark_testset.json", help="Path to testset JSON")
     parser.add_argument("--engine", choices=["local", "http"], default="local", help="Execution engine (local pipeline or http)")
     parser.add_argument("--url", default="https://imdrizzle-lurien-matrix-firewall.hf.space", help="Base URL for HTTP engine")
     parser.add_argument("--api-key", default=os.getenv("LURIEN_BENCH_KEY"), help="API key for HTTP engine")
     parser.add_argument("--threshold", type=float, default=0.50, help="Risk threshold")
-    parser.add_argument("--output-dir", default=".benchmarks/results", help="Directory to save raw predictions and logs")
+    parser.add_argument("--output-dir", default="benchmarks/results", help="Directory to save raw predictions and logs")
     args = parser.parse_args()
 
     # Load dataset
