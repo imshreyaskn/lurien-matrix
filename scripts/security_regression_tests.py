@@ -236,6 +236,27 @@ class PipelineThresholdTests(unittest.TestCase):
         self.assertFalse(result.safe)
         self.assertEqual(result.flagged_layer, "heuristic")
 
+    def test_configured_context_policy_fails_closed_when_unavailable(self):
+        from types import SimpleNamespace
+
+        pipeline = self._pipeline()
+
+        class UnavailablePolicy:
+            def check(self, text, app_context="general"):
+                return SimpleNamespace(
+                    triggered=True, app_context=app_context,
+                    similarity_to_intent=0.0,
+                    reason="policy_unavailable_fail_closed", score=1.0,
+                    latency_ms=0.01, ran=False
+                )
+
+        pipeline.policy = UnavailablePolicy()
+        result = pipeline.classify(
+            "scope test", threshold=0.90, app_context="coding_assistant"
+        )
+        self.assertFalse(result.safe)
+        self.assertEqual(result.flagged_layer, "context_policy")
+
 
 class EmbeddingArtifactTests(unittest.TestCase):
     def test_git_lfs_pointer_is_not_accepted_as_faiss_binary(self):
