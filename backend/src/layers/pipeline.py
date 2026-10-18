@@ -1,6 +1,6 @@
 """
 6-Layer Classifier Pipeline
-Orchestrates Canary → Rule-Based → Heuristic → Embedding Similarity → ML → Context Policy layers in sequence.
+Orchestrates canary, rule-based, heuristic, embedding-similarity, local classifier, and context-policy checks in sequence.
 """
 
 import time
@@ -56,7 +56,7 @@ class ClassifierPipeline:
       1a. Rule-based regex matching (<5ms)
       1b. Heuristic signal analysis (<20ms)  
       2. Embedding Similarity lookup (<15ms)
-      3. ML DistilBERT classifier (<100ms)
+      3. Local ONNX sequence classifier (measure on target hardware)
       4. Context-aware Policy enforcer (<5ms)
     """
 
