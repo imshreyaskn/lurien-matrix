@@ -24,48 +24,62 @@ logger = logging.getLogger("llm_firewall.proxy")
 
 # ── Prompt Extractors ─────────────────────────────────────────
 
+def _collect_text(value) -> list[str]:
+    """Collect text-bearing values from provider message/tool structures."""
+    fragments: list[str] = []
+    if isinstance(value, str):
+        if value.strip():
+            fragments.append(value)
+    elif isinstance(value, list):
+        for item in value:
+            fragments.extend(_collect_text(item))
+    elif isinstance(value, dict):
+        # Explicit text fields are common to OpenAI/Anthropic content blocks.
+        for key in ("text", "content", "parts", "response", "functionResponse",
+                    "functionCall", "arguments", "args", "output", "tool_calls"):
+            if key in value:
+                fragments.extend(_collect_text(value[key]))
+    return fragments
+
+
 def extract_openai_prompt(body: dict) -> Optional[str]:
-    try:
-        messages = body.get("messages", [])
-        if not messages:
-            return None
-        last_msg = messages[-1]
-        content = last_msg.get("content", "")
-        if isinstance(content, list):
-            text_parts = [p.get("text", "") for p in content if p.get("type") == "text"]
-            return " ".join(text_parts)
-        return content
-    except (KeyError, IndexError, TypeError):
+    """Inspect all conversation messages, including tool outputs and text blocks."""
+    messages = body.get("messages")
+    if not isinstance(messages, list) or not messages:
         return None
+    fragments: list[str] = []
+    for message in messages:
+        if isinstance(message, dict):
+            fragments.extend(_collect_text(message.get("content", "")))
+            fragments.extend(_collect_text(message.get("tool_calls", [])))
+    text = "\\n".join(fragments).strip()
+    return text or None
 
 
 def extract_gemini_prompt(body: dict) -> Optional[str]:
-    try:
-        contents = body.get("contents", [])
-        if not contents:
-            return None
-        last_content = contents[-1]
-        parts = last_content.get("parts", [])
-        if not parts:
-            return None
-        return parts[0].get("text", "")
-    except (KeyError, IndexError, TypeError):
+    """Inspect all Gemini contents/parts, including function responses."""
+    contents = body.get("contents")
+    if not isinstance(contents, list) or not contents:
         return None
+    fragments: list[str] = []
+    for content in contents:
+        if isinstance(content, dict):
+            fragments.extend(_collect_text(content.get("parts", [])))
+    text = "\\n".join(fragments).strip()
+    return text or None
 
 
 def extract_anthropic_prompt(body: dict) -> Optional[str]:
-    try:
-        messages = body.get("messages", [])
-        if not messages:
-            return None
-        last_msg = messages[-1]
-        content = last_msg.get("content", "")
-        if isinstance(content, list):
-            text_parts = [p.get("text", "") for p in content if p.get("type") == "text"]
-            return " ".join(text_parts)
-        return content
-    except (KeyError, IndexError, TypeError):
+    """Inspect all Anthropic messages, including tool-result blocks."""
+    messages = body.get("messages")
+    if not isinstance(messages, list) or not messages:
         return None
+    fragments: list[str] = []
+    for message in messages:
+        if isinstance(message, dict):
+            fragments.extend(_collect_text(message.get("content", "")))
+    text = "\\n".join(fragments).strip()
+    return text or None
 
 
 # ── Provider Configuration ────────────────────────────────────
@@ -246,6 +260,8 @@ class ProxyEngine:
             if model not in ["gemini-pro", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-ultra", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest"]:
                 raise ValueError("Invalid Gemini model specified")
             url = url.format(model=model)
+            if stream:
+                url = url.replace(":generateContent", ":streamGenerateContent") + "?alt=sse"
 
         # Build headers
         headers = {"Content-Type": config["content_type"]}
@@ -316,16 +332,64 @@ class ProxyEngine:
             )
 
         if stream:
-            # Return real response but we will intercept chunks in stream_response
+            # Security boundary: buffer the complete successful response before exposing
+            # any bytes. Inspecting after each yield can leak an unsafe prefix before a
+            # later chunk reveals the violation.
             real_response = await self._client.send(
                 self._client.build_request("POST", url, json=body, headers=headers),
                 stream=True,
             )
-            # Attach req_id and canary to the response object for the stream generator
-            real_response.req_id = req_id
-            real_response.custom_canary = custom_canary
-            real_response.provider = provider
-            return real_response
+            if real_response.status_code != 200:
+                return real_response
+
+            chunks: list[bytes] = []
+            total_bytes = 0
+            max_bytes = 8 * 1024 * 1024
+            try:
+                async for chunk in real_response.aiter_bytes():
+                    total_bytes += len(chunk)
+                    if total_bytes > max_bytes:
+                        await real_response.aclose()
+                        return httpx.Response(
+                            status_code=502,
+                            content=json.dumps({
+                                "error": "response_too_large_to_inspect",
+                                "limit_bytes": max_bytes,
+                            }).encode("utf-8"),
+                            headers={"content-type": "application/json"},
+                            request=real_response.request,
+                        )
+                    chunks.append(chunk)
+            except Exception:
+                await real_response.aclose()
+                raise
+
+            response_bytes = b"".join(chunks)
+            response_text = extract_text_from_stream_buffer(chunks, provider)
+            output_result = self.output_monitor.check(
+                response_text, custom_canary=custom_canary
+            )
+            if output_result.flagged:
+                await log_blocked_output(output_result)
+                await real_response.aclose()
+                return get_blocked_response(output_result)
+
+            # Return a buffered response; the route may stream these already-inspected
+            # bytes to its caller, preserving the provider's event-stream framing.
+            headers_out = {
+                key: value for key, value in real_response.headers.items()
+                if key.lower() not in (
+                    "content-length", "transfer-encoding", "content-encoding"
+                )
+            }
+            response_out = httpx.Response(
+                status_code=real_response.status_code,
+                headers=headers_out,
+                content=response_bytes,
+                request=real_response.request,
+            )
+            await real_response.aclose()
+            return response_out
         else:
             real_response = await self._client.post(url, json=body, headers=headers)
             if real_response.status_code != 200:
@@ -349,50 +413,6 @@ class ProxyEngine:
             return real_response
 
     async def stream_response(self, response: httpx.Response):
-        """Yield chunks from a streaming response with on-the-fly monitoring."""
-        req_id = getattr(response, "req_id", None)
-        custom_canary = getattr(response, "custom_canary", None)
-        provider = getattr(response, "provider", None)
-        
-        chunks = []
+        """Yield only bytes from a response already inspected by forward_request."""
         async for chunk in response.aiter_bytes():
-            if req_id and self.output_monitor:
-                chunks.append(chunk)
-                # Parse current accumulated text
-                full_text = extract_text_from_stream_buffer(chunks, provider)
-                output_result = self.output_monitor.check(full_text, custom_canary=custom_canary)
-                
-                if output_result.flagged:
-                    # Log to DB
-                    try:
-                        await mongo.get_logs_collection().update_one(
-                            {"request_id": req_id},
-                            {
-                                "$set": {
-                                    "safe": False,
-                                    "blocked": True,
-                                    "risk_score": output_result.score,
-                                    "attack_type": output_result.reason,
-                                    "confidence": output_result.score,
-                                    "flagged_layer": "output_monitor",
-                                    "flagged_pattern": output_result.reason,
-                                    "layers.output_monitor": {
-                                        "ran": True,
-                                        "triggered": True,
-                                        "reason": output_result.reason,
-                                        "score": output_result.score,
-                                        "latency_ms": output_result.latency_ms
-                                    }
-                                }
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Failed to log streaming output block: {e}")
-                    
-                    error_json = json.dumps({"error": "response_blocked", "reason": output_result.reason})
-                    yield f"\n\ndata: {error_json}\n\n".encode("utf-8")
-                    break
-                else:
-                    yield chunk
-            else:
-                yield chunk
+            yield chunk
