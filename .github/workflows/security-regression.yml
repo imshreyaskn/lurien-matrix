@@ -1,0 +1,31 @@
+name: Lurien Matrix Security Regression Tests
+
+on:
+  push:
+    branches:
+      - fix/proxy-inspection-and-model-audit
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+      - name: Run focused security regression tests
+        run: python scripts/security_regression_tests.py
