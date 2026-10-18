@@ -24,7 +24,7 @@ from src.layers.canary import CanaryTokenDetector
 from src.layers.context_policy import ContextAwarePolicyLayer
 from src.layers.embedding_similarity import EmbeddingSimilarityLayer
 from src.layers.output_monitor import OutputMonitor
-from src.layers.pipeline import request_custom_canary, request_id_var
+from src.layers.pipeline import ClassifierPipeline, request_custom_canary, request_id_var
 from src.proxy.engine import (
     ProxyEngine,
     extract_anthropic_prompt,
@@ -166,6 +166,75 @@ class StreamingParserTests(unittest.TestCase):
         for provider, payload in samples.items():
             with self.subTest(provider=provider):
                 self.assertEqual(extract_text_from_stream_buffer([payload], provider), "hello")
+
+
+class PipelineThresholdTests(unittest.TestCase):
+    def _pipeline(self):
+        from types import SimpleNamespace
+
+        class Rules:
+            def analyze(self, text):
+                return SimpleNamespace(
+                    triggered=False, score=0.0, matched_pattern=None,
+                    attack_category=None, latency_ms=0.01
+                )
+
+        class Heuristic:
+            def analyze(self, text):
+                # This legacy local flag would block at 0.65 even if the caller
+                # explicitly configured a higher pipeline threshold.
+                return SimpleNamespace(
+                    ran=True, triggered=True, score=0.55, signals=None,
+                    latency_ms=0.01
+                )
+
+        class Canary:
+            def check(self, text, custom_canary=None):
+                return SimpleNamespace(
+                    triggered=False, score=0.0, latency_ms=0.01,
+                    matched_canary=None
+                )
+
+        class Embedding:
+            threshold = 0.85
+            def check(self, text):
+                return SimpleNamespace(
+                    triggered=False, similarity_score=0.10,
+                    nearest_attack_preview=None, latency_ms=0.01,
+                    ran=True, reason=None
+                )
+
+        class Classifier:
+            def predict(self, text):
+                return SimpleNamespace(
+                    ran=True, triggered=False, attack_class="safe",
+                    confidence=0.9, all_scores={"safe": 0.9}, latency_ms=0.01,
+                    warning=None, reason=None
+                )
+
+        class Policy:
+            def check(self, text, app_context="general"):
+                return SimpleNamespace(
+                    triggered=False, app_context=app_context,
+                    similarity_to_intent=1.0, reason="no_policy",
+                    score=0.0, latency_ms=0.01, ran=True
+                )
+
+        return ClassifierPipeline(
+            rule_based=Rules(), heuristic=Heuristic(), classifier=Classifier(),
+            canary_detector=Canary(), embedding_layer=Embedding(),
+            context_policy=Policy(), default_threshold=0.50
+        )
+
+    def test_request_threshold_overrides_legacy_heuristic_flag(self):
+        result = self._pipeline().classify("benign example", threshold=0.80)
+        self.assertTrue(result.safe)
+        self.assertIsNone(result.flagged_layer)
+
+    def test_default_threshold_blocks_heuristic_score_above_threshold(self):
+        result = self._pipeline().classify("heuristic example", threshold=0.50)
+        self.assertFalse(result.safe)
+        self.assertEqual(result.flagged_layer, "heuristic")
 
 
 class EmbeddingArtifactTests(unittest.TestCase):
