@@ -74,18 +74,20 @@ class ContextAwarePolicyLayer:
             )
 
         if self.model is None:
+            # A configured non-general policy is a security boundary: do not
+            # silently pass requests when its embedding model is unavailable.
             return PolicyResult(
-                triggered=False, app_context=app_context,
-                similarity_to_intent=0.0, reason="embedding_model_unavailable",
-                score=0.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
+                triggered=True, app_context=app_context,
+                similarity_to_intent=0.0, reason="policy_unavailable_fail_closed",
+                score=1.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
                 ran=False
             )
 
         if app_context not in self._profile_embeddings:
             return PolicyResult(
-                triggered=False, app_context=app_context,
-                similarity_to_intent=1.0, reason="unknown_profile",
-                score=0.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
+                triggered=True, app_context=app_context,
+                similarity_to_intent=0.0, reason="unknown_profile_fail_closed",
+                score=1.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
                 ran=False
             )
 
@@ -105,10 +107,10 @@ class ContextAwarePolicyLayer:
             )
         except Exception as exc:
             return PolicyResult(
-                triggered=False, app_context=app_context,
+                triggered=True, app_context=app_context,
                 similarity_to_intent=0.0,
-                reason=f"policy_inference_failed:{type(exc).__name__}",
-                score=0.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
+                reason=f"policy_inference_failed_fail_closed:{type(exc).__name__}",
+                score=1.0, latency_ms=round((time.perf_counter() - start) * 1000, 3),
                 ran=False
             )
 
