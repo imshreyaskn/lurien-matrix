@@ -274,7 +274,8 @@ class FailSoftStartupTests(unittest.TestCase):
         layer = ContextAwarePolicyLayer(model=None)
         result = layer.check("please help", app_context="coding_assistant")
         self.assertFalse(result.ran)
-        self.assertEqual(result.reason, "embedding_model_unavailable")
+        self.assertTrue(result.triggered)
+        self.assertEqual(result.reason, "policy_unavailable_fail_closed")
 
 
 class StreamingProxyTests(unittest.TestCase):
