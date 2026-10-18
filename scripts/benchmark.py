@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import statistics
+import sys
 import time
 
 import httpx
@@ -227,14 +228,103 @@ def run_benchmark(base_url: str, api_key: str) -> None:
 """)
 
 
+def run_benchmark_local_smoke():
+    """Runs the 50/50 smoke test in-process via ClassifierPipeline."""
+    from run_comprehensive_benchmark import load_local_pipeline
+    pipeline = load_local_pipeline(default_threshold=0.50)
+
+    tp_latencies = []
+    tp_detected = 0
+    fp_latencies = []
+    fp_triggered = 0
+
+    print(f"\nBenchmarking locally against ClassifierPipeline")
+    print(f"   Running {len(MALICIOUS)} malicious + {len(SAFE)} safe prompts...\n")
+
+    for i, prompt in enumerate(MALICIOUS, 1):
+        t0 = time.perf_counter()
+        res = pipeline.classify(prompt)
+        latency_ms = (time.perf_counter() - t0) * 1000
+        tp_latencies.append(latency_ms)
+        if not res.safe:
+            tp_detected += 1
+        print(f"  [M {i:02d}/{len(MALICIOUS)}]", end="\r")
+
+    print()
+
+    for i, prompt in enumerate(SAFE, 1):
+        t0 = time.perf_counter()
+        res = pipeline.classify(prompt)
+        latency_ms = (time.perf_counter() - t0) * 1000
+        fp_latencies.append(latency_ms)
+        if not res.safe:
+            fp_triggered += 1
+        print(f"  [S {i:02d}/{len(SAFE)}]", end="\r")
+
+    print("\n")
+
+    all_latencies = tp_latencies + fp_latencies
+
+    def pct(lst, p):
+        s = sorted(lst)
+        idx = int(len(s) * p / 100)
+        return round(s[min(idx, len(s) - 1)], 1)
+
+    median_ms  = round(statistics.median(all_latencies), 1)
+    p95_ms     = pct(all_latencies, 95)
+    p99_ms     = pct(all_latencies, 99)
+    tpr        = round(tp_detected / len(MALICIOUS) * 100, 1)
+    fpr        = round(fp_triggered / len(SAFE) * 100, 1)
+
+    print("=" * 60)
+    print("## Lurien Matrix Benchmark Results (Local In-Process Engine)\n")
+    print("### Latency")
+    print(f"| Metric   | Value   |")
+    print(f"|----------|---------|")
+    print(f"| Median   | {median_ms} ms |")
+    print(f"| P95      | {p95_ms} ms |")
+    print(f"| P99      | {p99_ms} ms |")
+    print()
+    print("### Detection Accuracy")
+    print(f"| Metric                      | Value   |")
+    print(f"|-----------------------------|---------|")
+    print(f"| True Positive Rate (TPR)    | {tpr}%  |")
+    print(f"| False Positive Rate (FPR)   | {fpr}%  |")
+    print(f"| Malicious detected          | {tp_detected}/{len(MALICIOUS)} |")
+    print(f"| Safe prompts incorrectly blocked | {fp_triggered}/{len(SAFE)} |")
+    print("=" * 60)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Lurien Matrix Benchmark")
-    parser.add_argument("--url",     default=DEFAULT_URL,                  help="Backend base URL")
-    parser.add_argument("--api-key", default=os.getenv("LURIEN_BENCH_KEY"), help="Lurien API key")
+    parser.add_argument("--url",         default=DEFAULT_URL,                  help="Backend base URL")
+    parser.add_argument("--api-key",     default=os.getenv("LURIEN_BENCH_KEY"), help="Lurien API key")
+    parser.add_argument("--engine",      choices=["http", "local"], default="local", help="Execution engine (local or http)")
+    parser.add_argument("--held-out",    action="store_true", help="Run full held-out test set benchmark with raw logs preservation")
+    parser.add_argument("--save-raw",    action="store_true", help="Preserve raw predictions and metrics JSON/CSV")
+    parser.add_argument("--output-dir",  default=".benchmarks/results", help="Directory to save raw predictions")
     args = parser.parse_args()
 
+    if args.held_out or args.save_raw:
+        # Delegate to comprehensive benchmark engine
+        import run_comprehensive_benchmark
+        sys.argv = [
+            "run_comprehensive_benchmark.py",
+            "--engine", args.engine,
+            "--url", args.url,
+            "--output-dir", args.output_dir
+        ]
+        if args.api_key:
+            sys.argv.extend(["--api-key", args.api_key])
+        run_comprehensive_benchmark.main()
+        return
+
+    if args.engine == "local":
+        run_benchmark_local_smoke()
+        return
+
     if not args.api_key:
-        print("[ERR] Provide an API key via --api-key or LURIEN_BENCH_KEY env var.")
+        print("[ERR] Provide an API key via --api-key or LURIEN_BENCH_KEY env var (or use --engine local).")
         return
 
     run_benchmark(args.url, args.api_key)
@@ -242,3 +332,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

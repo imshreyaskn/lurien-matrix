@@ -5,11 +5,14 @@ import os
 import asyncio
 from neo4j import AsyncGraphDatabase
 
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://04935f05.databases.neo4j.io")
-NEO4J_USER = os.getenv("NEO4J_USER", "04935f05")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "REDACTED_SECRET")
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 async def ping():
+    if not (NEO4J_URI and NEO4J_USER and NEO4J_PASSWORD):
+        print("Neo4j ping skipped: credentials not configured in environment.")
+        return
     try:
         driver = AsyncGraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
         await driver.verify_connectivity()

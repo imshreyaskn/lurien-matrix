@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv('backend/.env')
 
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://04935f05.databases.neo4j.io")
-NEO4J_USER = os.getenv("NEO4J_USER", "04935f05")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "REDACTED_SECRET")
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 MONGODB_URI = os.getenv("MONGODB_URI")
 MONGODB_DB = os.getenv("MONGODB_DB", "llm_firewall")
 

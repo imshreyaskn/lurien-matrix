@@ -13,11 +13,11 @@ This file contains critical, long-lived context about the project architecture, 
 
 ## 2. Infrastructure & Secrets
 - **MongoDB Atlas**:
-  - Connection string format: `mongodb://sabharishc98:<db_password>@ac-0kesxwy-shard-00-00.hnlcjkk...`
-  - Current Password: *Updated to `REDACTED_PASSWORD` (July 2026)*
-  - Network Access: IP Whitelist is configured to `0.0.0.0/0` (Allows HF Space to connect).
-- **Hugging Face Secrets**: 
-  - All `.env` variables from `backend/.env` have been migrated directly into Hugging Face Space Secrets via the HF API. The `backend/.env` file is excluded from HF via `.gitignore` for security.
+  - Connection string format: `mongodb://<db_username>:<db_password>@<cluster-host>/...`
+  - Credentials Policy: Managed strictly through runtime environment variables (`MONGODB_URI`). Never commit raw passwords or connection strings to documentation or source code.
+  - Network Access: Configure Atlas IP Whitelist to allowed deployment CIDRs or VPC peering.
+- **Secret Management**:
+  - All production secrets (`MONGODB_URI`, `REDIS_URL`, `NEO4J_PASSWORD`, `JWT_SECRET_KEY`, `API_KEY_PEPPER`, `SYSTEM_CANARY`) must be injected exclusively via Hugging Face Space Secrets or hosting platform environment variables. Local development uses `.env` which is strictly git-ignored and docker-ignored.
 - **Upstash Redis**: Used for rate-limiting. Falls back gracefully if connection fails (rate limiting is disabled).
 
 ## 3. Project Architecture

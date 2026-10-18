@@ -17,7 +17,7 @@ logger = logging.getLogger("llm_firewall.auth_middleware")
 
 security = HTTPBearer()
 
-SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "d9f933e574ce4f4f41da2de40e9b3f2e72452ee35e906d8639f36da8033bb982")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 

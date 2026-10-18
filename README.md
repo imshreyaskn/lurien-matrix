@@ -657,26 +657,84 @@ docker compose up --build
 
 ---
 
-# Benchmarks
+# Benchmarks & Experimental Evidence
 
-The repository includes a benchmark script for evaluating the firewall against a set of malicious and safe prompts.
+Lurien Matrix includes experimental benchmarks for evaluating firewall accuracy, defense-in-depth short-circuiting, and real-time inference latency across both a baseline smoke test and a diverse held-out generalization test set.
 
-The documented benchmark uses:
+### 1. Generalization Benchmark (357 Prompts across 5 Attack/Benign Categories)
 
-* 50 malicious prompts
-* 50 safe prompts
+To establish generalization beyond the smoke test, the held-out suite incorporates:
+* **In-the-wild Adversarial Jailbreaks (`rubend18/ChatGPT-Jailbreak-Prompts`)**: DAN, developer mode overrides, multi-persona escalation.
+* **Standard Prompt Injection Benchmark (`deepset/prompt-injections` test split)**: Indirect instruction injections and goal hijacking.
+* **Adversarial Evasion & Obfuscation**: Base64/ROT13 encoding, delimiter smuggling, zero-width spaces, and Pliny format templates.
+* **Hard Benign & Boundary Prompts**: Harmless cybersecurity queries, system administration commands (`kill -9`, `logrotate`, `.gitignore`), and programming syntax.
+* **Baseline Smoke Test**: 50 malicious + 50 benign conversational prompts.
 
-Reported results:
+#### Performance Summary (Full 357-Prompt Suite)
 
-| Metric                       |  Result |
-| ---------------------------- | ------: |
-| True Positive Rate           |     96% |
-| False Positive Rate          |      2% |
-| Malicious prompts detected   | 48 / 50 |
-| Safe prompts blocked         |  1 / 50 |
-| Server-side pipeline latency | 8–35 ms |
+| Metric | Result | Benchmark Objective |
+| :--- | ---: | :--- |
+| **True Positive Rate (TPR / Recall)** | **92.35%** | Neutralizes 181 / 196 malicious attacks |
+| **False Positive Rate (FPR)** | **13.66%** | Blocks only 22 / 161 benign queries |
+| **Overall Accuracy** | **89.64%** | Total classification accuracy |
+| **Balanced Accuracy** | **89.34%** | Balanced across positive and negative classes |
+| **Precision (PPV)** | **89.16%** | Confidence in positive threat alerts |
+| **Specificity (TNR)** | **86.34%** | Accuracy on benign inputs |
+| **F1 Score** | **0.9073** | Harmonic balance between Precision & Recall |
+| **Matthews Correlation Coefficient (MCC)** | **0.7905** | High overall classification correlation (-1 to +1) |
+| **ROC-AUC** | **0.9354** | Discriminative power across threshold values |
+| **PR-AUC** | **0.9406** | Precision-Recall curve area |
+| **Median Pipeline Latency (p50)** | **47.6 ms** | Real-time proxy inspection overhead |
+| **P95 Pipeline Latency** | **109.2 ms** | 95th percentile latency |
 
-These measurements describe the tested deployment and dataset. They should not be interpreted as a general accuracy or latency guarantee.
+#### Split Performance Comparison
+
+| Dataset Split | Samples | TPR (Recall) | FPR (False Alarm) | Accuracy | F1 Score | Median Latency |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **Baseline Smoke Test** | 100 | **98.0%** (49/50) | **2.0%** (1/50) | **98.0%** | **0.9800** | 41.8 ms |
+| **Held-Out Generalization Suite** | 257 | **90.41%** (132/146) | **18.92%** (21/111) | **86.38%** | **0.8829** | 53.2 ms |
+
+#### Category-Level Detection Breakdown
+
+| Category | Type | Prompts | Caught / Flagged | Rate |
+| :--- | :--- | ---: | ---: | ---: |
+| In-the-wild Jailbreaks (`rubend18`) | Malicious | 60 | 60 | **100.0%** |
+| Baseline Smoke Malicious | Malicious | 50 | 49 | **98.0%** |
+| Evasion & Obfuscation (Base64/ROT13/Pliny) | Malicious | 26 | 25 | **96.15%** |
+| Deepset Prompt Injections | Malicious | 60 | 47 | **78.33%** |
+| Hard Benign / Security Engineering Queries | Benign | 55 | 9 | **16.36%** FPR |
+| Deepset Benign Queries | Benign | 56 | 12 | **21.43%** FPR |
+| Baseline Smoke Safe Queries | Benign | 50 | 1 | **2.00%** FPR |
+
+#### Defense-in-Depth Layer Attribution
+
+| Security Layer | Threats Intercepted | Share of Neutralized Threats |
+| :--- | ---: | ---: |
+| **Embedding Similarity Layer** (FAISS + MiniLM) | 94 | 51.9% |
+| **Local DistilBERT ML Classifier** (ONNX CPU) | 46 | 25.4% |
+| **Rule-Based Regex Engine** (Heuristics & Regex) | 41 | 22.7% |
+
+*Early Exit Efficiency: **22.65%** of threats are terminated at or before Layer 2 without invoking downstream embedding lookup or ML inference.*
+
+### Reproducing the Benchmarks & Raw Logs
+
+All raw predictions, per-layer outputs, and metrics are preserved under `.benchmarks/results/`:
+
+```bash
+# 1. Run full held-out benchmark with raw predictions preservation (JSON + CSV)
+python scripts/benchmark.py --held-out
+
+# 2. Or run directly with custom thresholds and engine
+python scripts/run_comprehensive_benchmark.py --engine local --threshold 0.50
+
+# 3. Run classic 50-malicious / 50-benign smoke test
+python scripts/benchmark.py --engine local
+```
+
+Raw artifacts generated:
+* `predictions_latest.json` & `predictions_latest.csv`: Full prediction record, risk scores, flagged layers, and latency per sample.
+* `metrics_latest.json`: Structured KPI metrics, confusion matrix, and category breakdowns.
+* `benchmark_report_latest.md`: Comprehensive Markdown report with failure analysis.
 
 ---
 

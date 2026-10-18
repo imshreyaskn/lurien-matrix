@@ -27,7 +27,7 @@ jobs:
 
       - name: Ping Neo4j Threat Graph
         env:
-          NEO4J_URI: ${{ secrets.NEO4J_URI || 'neo4j+s://04935f05.databases.neo4j.io' }}
-          NEO4J_USER: ${{ secrets.NEO4J_USER || '04935f05' }}
-          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD || 'REDACTED_SECRET' }}
+          NEO4J_URI: ${{ secrets.NEO4J_URI }}
+          NEO4J_USER: ${{ secrets.NEO4J_USER }}
+          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD }}
         run: python scripts/ping_neo4j.py

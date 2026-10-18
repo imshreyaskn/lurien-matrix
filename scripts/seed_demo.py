@@ -25,13 +25,7 @@ import bcrypt
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # ── Config ────────────────────────────────────────────────────────────────────
-MONGODB_URI = os.getenv(
-    "MONGODB_URI",
-    "mongodb://sabharishc98:REDACTED_PASSWORD@ac-0kesxwy-shard-00-00.hnlcjkk.mongodb.net:27017,"
-    "ac-0kesxwy-shard-00-01.hnlcjkk.mongodb.net:27017,"
-    "ac-0kesxwy-shard-00-02.hnlcjkk.mongodb.net:27017/"
-    "?ssl=true&replicaSet=atlas-ttqpy7-shard-0&authSource=admin&appName=sab"
-)
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 MONGODB_DB = os.getenv("MONGODB_DB", "llm_firewall")
 API_KEY_PEPPER = os.getenv("API_KEY_PEPPER", "change_me_to_a_random_string_in_production")
 

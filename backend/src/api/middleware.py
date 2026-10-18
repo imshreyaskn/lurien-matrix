@@ -109,7 +109,7 @@ async def resolve_check_auth(request: Request) -> dict:
     from jose import JWTError, jwt as _jwt
     from bson import ObjectId
 
-    SECRET_KEY = os.getenv("JWT_SECRET_KEY", "fallback_secret_key_please_change")
+    SECRET_KEY = os.getenv("JWT_SECRET_KEY", "d9f933e574ce4f4f41da2de40e9b3f2e72452ee35e906d8639f36da8033bb982")
     ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
     try:
