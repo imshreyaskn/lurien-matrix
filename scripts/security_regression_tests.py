@@ -209,53 +209,83 @@ class FailSoftStartupTests(unittest.TestCase):
 
 
 class StreamingProxyTests(unittest.TestCase):
+    CASES = {
+        "openai": {
+            "body": {"model": "unit-test", "messages": [{"role": "user", "content": "hi"}], "stream": True},
+            "sse": lambda text: ('data: {"choices":[{"delta":{"content":' + json.dumps(text) + '}}]}\n\ndata: [DONE]\n\n').encode(),
+        },
+        "groq": {
+            "body": {"model": "unit-test", "messages": [{"role": "user", "content": "hi"}], "stream": True},
+            "sse": lambda text: ('data: {"choices":[{"delta":{"content":' + json.dumps(text) + '}}]}\n\ndata: [DONE]\n\n').encode(),
+        },
+        "gemini": {
+            "body": {"model": "gemini-1.5-flash", "contents": [{"role": "user", "parts": [{"text": "hi"}]}], "stream": True},
+            "sse": lambda text: ('data: {"candidates":[{"content":{"parts":[{"text":' + json.dumps(text) + '}]}}]}\n\n').encode(),
+        },
+        "anthropic": {
+            "body": {"model": "claude-3-haiku-20240307", "messages": [{"role": "user", "content": "hi"}], "stream": True},
+            "sse": lambda text: ('data: {"type":"content_block_delta","delta":{"type":"text_delta","text":' + json.dumps(text) + '}}\n\n').encode(),
+        },
+    }
+
     def setUp(self):
         request_id_var.set("")
         request_custom_canary.set("")
 
-    def test_blocked_stream_is_inspected_before_any_text_is_returned(self):
+    def _assert_request_config(self, provider, fake):
+        request = fake.last_request
+        self.assertIsNotNone(request)
+        if provider in {"openai", "groq"}:
+            self.assertEqual(request.headers.get("authorization"), "Bearer test-key")
+        elif provider == "gemini":
+            self.assertEqual(request.headers.get("x-goog-api-key"), "test-key")
+            self.assertIn(":streamGenerateContent?alt=sse", str(request.url))
+        elif provider == "anthropic":
+            self.assertEqual(request.headers.get("x-api-key"), "test-key")
+            self.assertEqual(request.headers.get("anthropic-version"), "2023-06-01")
+
+    def test_all_supported_providers_buffer_safe_streams_and_preserve_bytes(self):
+        for provider, case in self.CASES.items():
+            with self.subTest(provider=provider):
+                payload = case["sse"]("safe answer")
+                chunks = [payload[i:i + 13] for i in range(0, len(payload), 13)]
+                engine = ProxyEngine(pipeline=None, output_monitor=OutputMonitor())
+                fake = FakeAsyncClient(chunks)
+                engine._client = fake
+                request_custom_canary.set("")
+                try:
+                    response = asyncio.run(engine.forward_request(
+                        provider=provider, body=case["body"],
+                        llm_api_key="test-key", stream=True,
+                    ))
+                    self.assertEqual(response.status_code, 200)
+                    self._assert_request_config(provider, fake)
+                    returned = asyncio.run(_collect_response(engine, response))
+                    self.assertEqual(b"".join(returned), payload)
+                finally:
+                    asyncio.run(engine.close())
+
+    def test_all_supported_providers_block_canary_before_releasing_any_text(self):
         secret = "STREAM-CANARY-SECRET"
-        sse = (
-            'data: {"choices":[{"delta":{"content":"prefix ' + secret + ' suffix"}}]}\n\n'
-            'data: [DONE]\n\n'
-        ).encode("utf-8")
-        chunks = [sse[i:i+9] for i in range(0, len(sse), 9)]
-
-        engine = ProxyEngine(pipeline=None, output_monitor=OutputMonitor())
-        engine._client = FakeAsyncClient(chunks)
-        request_custom_canary.set(secret)
-        try:
-            response = asyncio.run(engine.forward_request(
-                provider="openai",
-                body={"model": "unit-test", "messages": [{"role": "user", "content": "hi"}], "stream": True},
-                llm_api_key="test-key",
-                stream=True,
-            ))
-            self.assertEqual(response.status_code, 403)
-            self.assertIn("response_blocked", response.text)
-            self.assertNotIn("prefix " + secret, response.text)
-        finally:
-            asyncio.run(engine.close())
-
-    def test_safe_stream_is_forwarded_only_after_inspection(self):
-        sse = (
-            b'data: {"choices":[{"delta":{"content":"safe answer"}}]}\n\n'
-            b'data: [DONE]\n\n'
-        )
-        engine = ProxyEngine(pipeline=None, output_monitor=OutputMonitor())
-        engine._client = FakeAsyncClient([sse[:19], sse[19:]])
-        try:
-            response = asyncio.run(engine.forward_request(
-                provider="openai",
-                body={"model": "unit-test", "messages": [{"role": "user", "content": "hi"}], "stream": True},
-                llm_api_key="test-key",
-                stream=True,
-            ))
-            self.assertEqual(response.status_code, 200)
-            chunks = asyncio.run(_collect_response(engine, response))
-            self.assertEqual(b"".join(chunks), sse)
-        finally:
-            asyncio.run(engine.close())
+        for provider, case in self.CASES.items():
+            with self.subTest(provider=provider):
+                payload = case["sse"]("prefix " + secret + " suffix")
+                chunks = [payload[i:i + 7] for i in range(0, len(payload), 7)]
+                engine = ProxyEngine(pipeline=None, output_monitor=OutputMonitor())
+                fake = FakeAsyncClient(chunks)
+                engine._client = fake
+                request_custom_canary.set(secret)
+                try:
+                    response = asyncio.run(engine.forward_request(
+                        provider=provider, body=case["body"],
+                        llm_api_key="test-key", stream=True,
+                    ))
+                    self.assertEqual(response.status_code, 403)
+                    self.assertIn("response_blocked", response.text)
+                    self.assertNotIn("prefix " + secret, response.text)
+                    self._assert_request_config(provider, fake)
+                finally:
+                    asyncio.run(engine.close())
 
 
 async def _collect_response(engine, response):
