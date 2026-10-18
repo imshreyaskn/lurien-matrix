@@ -293,11 +293,15 @@ class ClassifierPipeline:
         policy_res = self.policy.check(text, app_context)
         if policy_res.ran:
             current_risk = update_risk(policy_res.score)
+            is_policy_triggered = policy_res.triggered or current_risk >= threshold
+        elif app_context != "general":
+            # Fail closed for an explicitly configured profile when its policy
+            # cannot be evaluated; silently bypassing it would weaken scope control.
+            current_risk = 1.0
+            is_policy_triggered = True
         else:
             current_risk = cumulative_risk
-        is_policy_triggered = policy_res.ran and (
-            policy_res.triggered or current_risk >= threshold
-        )
+            is_policy_triggered = False
 
         layers_data["context_policy"] = {
             "ran": policy_res.ran,
