@@ -210,15 +210,34 @@ class ClassifierPipeline:
 
         # ── Layer 2: Embedding Similarity ──────────────────────────
         embedding_res = self.embedding.check(text)
-        current_risk = update_risk(embedding_res.similarity_score)
-        is_emb_triggered = embedding_res.triggered or (current_risk >= threshold)
+        # Cosine similarity is not a calibrated attack probability. Do not add
+        # a raw cosine value to the cumulative risk score: that can block a
+        # prompt even when it is below the embedding threshold.
+        embedding_risk = 0.0
+        if embedding_res.ran and embedding_res.triggered:
+            denom = max(1e-9, 1.0 - self.embedding.threshold)
+            embedding_risk = min(
+                1.0,
+                max(0.0, (embedding_res.similarity_score - self.embedding.threshold) / denom)
+            )
+            current_risk = update_risk(embedding_risk)
+        else:
+            current_risk = cumulative_risk
+
+        is_emb_triggered = embedding_res.ran and (
+            embedding_res.triggered or current_risk >= threshold
+        )
         layers_data["embedding_similarity"] = {
-            "ran": True,
+            "ran": embedding_res.ran,
             "triggered": is_emb_triggered,
             "similarity_score": embedding_res.similarity_score,
+            "risk_contribution": round(embedding_risk, 4),
             "nearest_attack_preview": embedding_res.nearest_attack_preview,
-            "latency_ms": embedding_res.latency_ms
+            "latency_ms": embedding_res.latency_ms,
+            **({"reason": embedding_res.reason} if embedding_res.reason else {})
         }
+        if not embedding_res.ran:
+            warnings.append("embedding_layer_unavailable")
         if is_emb_triggered:
             return build_short_circuit(
                 flagged_name="embedding_similarity",
@@ -269,17 +288,24 @@ class ClassifierPipeline:
 
         # ── Layer 4: Context Policy ────────────────────────────────
         policy_res = self.policy.check(text, app_context)
-        current_risk = update_risk(policy_res.score)
-        is_policy_triggered = policy_res.triggered or (current_risk >= threshold)
-        
+        if policy_res.ran:
+            current_risk = update_risk(policy_res.score)
+        else:
+            current_risk = cumulative_risk
+        is_policy_triggered = policy_res.ran and (
+            policy_res.triggered or current_risk >= threshold
+        )
+
         layers_data["context_policy"] = {
-            "ran": True,
+            "ran": policy_res.ran,
             "triggered": is_policy_triggered,
             "app_context": policy_res.app_context,
             "similarity_to_intent": policy_res.similarity_to_intent,
             "reason": policy_res.reason,
             "latency_ms": policy_res.latency_ms
         }
+        if not policy_res.ran:
+            warnings.append("context_policy_unavailable")
         if is_policy_triggered:
             return build_short_circuit(
                 flagged_name="context_policy",
